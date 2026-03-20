@@ -28,15 +28,6 @@
   --color-carbonBG: #232023;
 }
 
-html {
-  font-family: var(--font-benzin-medium);
-  font-weight: 500;
-}
-
-:root {
-  background-color: #2e2c2e;
-}
-
 body {
   margin: 0;
   display: flex;
