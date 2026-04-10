@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TEAM4 BANKING — Aberdeen's Bank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #3b6ff6;
+    --blue-dark: #2a5ce0;
+    --blue-light: #eef2fe;
+    --blue-mid: #c7d5fc;
+    --bg: #f0f2f7;
+    --bg2: #e8eaf2;
+    --surface: #ffffff;
+    --text: #111827;
+    --muted: #6b7280;
+    --border: rgba(0,0,0,0.07);
+    --shadow: 0 2px 12px rgba(59,111,246,0.08);
+    --shadow-md: 0 4px 24px rgba(59,111,246,0.13);
+    --font: 'Manrope', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 5vw;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+  }
+  .nav-logo {
+    font-family: var(--font);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--blue); }
+  .nav-links {
+    display: flex; gap: 2rem; list-style: none;
+  }
+  .nav-links a {
+    text-decoration: none; color: var(--muted);
+    font-size: 0.875rem; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--blue); color: #fff;
+    font-family: var(--font); font-weight: 600; font-size: 0.875rem;
+    padding: 0.55rem 1.4rem; border-radius: 50px; border: none;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 2px 10px rgba(59,111,246,0.3);
+  }
+  .nav-cta:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(59,111,246,0.35); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 5vw 5rem;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg-circle {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,111,246,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-bg-circle.c1 { width: 700px; height: 700px; top: -200px; right: -150px; }
+  .hero-bg-circle.c2 { width: 400px; height: 400px; bottom: 50px; left: -100px; }
+
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: var(--blue-light); border: 1px solid var(--blue-mid);
+    color: var(--blue); font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0.4rem 1rem; border-radius: 50px;
+    margin-bottom: 2rem; width: fit-content;
+  }
+  .hero-tag::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--blue); display: block;
+  }
+
+  .hero h1 {
+    font-family: var(--font);
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    max-width: 900px;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+  .hero h1 .blue { color: var(--blue); }
+  .hero h1 .stroke {
+    -webkit-text-stroke: 2px var(--text);
+    color: transparent;
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.15rem);
+    color: var(--muted); font-weight: 400;
+    max-width: 520px; line-height: 1.7;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--blue); color: #fff;
+    font-weight: 700; font-size: 0.95rem;
+    padding: 0.85rem 2.2rem; border-radius: 50px; border: none;
+    cursor: pointer; text-decoration: none;
+    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    display: inline-block;
+    box-shadow: 0 4px 16px rgba(59,111,246,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); background: var(--blue-dark); box-shadow: 0 6px 20px rgba(59,111,246,0.38); }
+  .btn-ghost {
+    background: var(--surface); color: var(--text);
+    font-weight: 600; font-size: 0.95rem;
+    padding: 0.85rem 2.2rem; border-radius: 50px;
+    border: 1px solid var(--border);
+    cursor: pointer; text-decoration: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    display: inline-block;
+    box-shadow: var(--shadow);
+  }
+  .btn-ghost:hover { border-color: var(--blue-mid); box-shadow: var(--shadow-md); }
+
+  .hero-stats {
+    display: flex; gap: 3rem; margin-top: 4rem;
+    border-top: 1px solid var(--border);
+    padding-top: 2.5rem; flex-wrap: wrap;
+  }
+  .stat-num {
+    font-family: var(--font); font-size: 2.2rem; font-weight: 800;
+    color: var(--blue); letter-spacing: -0.03em;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--muted); font-weight: 500; margin-top: 0.1rem; }
+
+  /* SECTION SHARED */
+  section { padding: 6rem 5vw; }
+  .section-tag {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--blue);
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: var(--font);
+    font-size: clamp(2.2rem, 4vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.05; letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+  .section-sub {
+    color: var(--muted); font-size: 1rem; font-weight: 400;
+    line-height: 1.7; max-width: 500px;
+  }
+
+  /* HOW IT WORKS */
+  .how { background: var(--surface); }
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 4rem;
+  }
+  .how-step {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .how-step:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+  .step-num {
+    font-family: var(--font); font-size: 3rem; font-weight: 800; letter-spacing: -0.05em;
+    color: var(--blue-mid); line-height: 1;
+    margin-bottom: 1rem;
+  }
+  .step-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--blue-light); border: 1px solid var(--blue-mid);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.2rem; font-size: 1.2rem;
+  }
+  .how-step h3 {
+    font-weight: 700; font-size: 1rem; margin-bottom: 0.6rem; color: var(--text);
+  }
+  .how-step p { font-size: 0.875rem; color: var(--muted); line-height: 1.65; }
+
+  /* DUAL REWARDS */
+  .rewards { background: var(--bg); }
+  .rewards-layout {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 1.5rem; margin-top: 4rem;
+  }
+  @media (max-width: 700px) { .rewards-layout { grid-template-columns: 1fr; } }
+  .reward-card {
+    border-radius: 24px; padding: 2.5rem;
+    position: relative; overflow: hidden;
+  }
+  .reward-card.bank {
+    background: var(--blue); color: #fff;
+  }
+  .reward-card.biz {
+    background: var(--surface); border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    color: var(--text);
+  }
+  .reward-card-tag {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; margin-bottom: 1rem;
+    opacity: 0.65;
+  }
+  .reward-card h3 {
+    font-family: var(--font); font-size: 2rem; font-weight: 800;
+    letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 0.8rem;
+  }
+  .reward-card p { font-size: 0.9rem; line-height: 1.65; opacity: 0.8; }
+  .reward-examples {
+    margin-top: 2rem; display: flex; flex-direction: column; gap: 0.6rem;
+  }
+  .reward-pill {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.45rem 1rem; border-radius: 50px;
+    font-size: 0.8rem; font-weight: 600; width: fit-content;
+  }
+  .reward-card.bank .reward-pill {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+  }
+  .reward-card.biz .reward-pill {
+    background: var(--blue-light);
+    color: var(--blue);
+    border: 1px solid var(--blue-mid);
+  }
+  .reward-pill::before {
+    content: '✦'; font-size: 0.6rem;
+  }
+
+  /* BUSINESSES */
+  .businesses { background: var(--surface); }
+  .biz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 1rem; margin-top: 3rem;
+  }
+  .biz-card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 18px; padding: 1.6rem 1.4rem;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+  }
+  .biz-card:hover {
+    border-color: var(--blue-mid);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+  .biz-icon {
+    font-size: 1.8rem; margin-bottom: 0.9rem;
+  }
+  .biz-card h4 { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; color: var(--text); }
+  .biz-card span { font-size: 0.75rem; color: var(--muted); }
+
+  .biz-note {
+    margin-top: 2.5rem;
+    background: var(--blue-light); border: 1px solid var(--blue-mid);
+    border-radius: 16px; padding: 1.5rem 2rem;
+    display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+  }
+  .biz-note p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; flex: 1; min-width: 200px; }
+  .biz-note p strong { color: var(--text); }
+  .biz-note a {
+    background: var(--blue); color: #fff;
+    font-weight: 700; font-size: 0.85rem;
+    padding: 0.7rem 1.5rem; border-radius: 50px;
+    text-decoration: none; white-space: nowrap;
+    transition: transform 0.2s, background 0.2s;
+    box-shadow: 0 2px 10px rgba(59,111,246,0.28);
+  }
+  .biz-note a:hover { transform: translateY(-1px); background: var(--blue-dark); }
+
+  /* WHY */
+  .why { background: var(--bg); }
+  .why-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem; margin-top: 3.5rem;
+  }
+  .why-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow);
+  }
+  .why-card:hover { border-color: var(--blue-mid); box-shadow: var(--shadow-md); }
+  .why-icon {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: var(--blue-light); border: 1px solid var(--blue-mid);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; margin-bottom: 1.2rem;
+  }
+  .why-card h4 { font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; color: var(--text); }
+  .why-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+
+  /* CTA */
+  .cta-section {
+    background: var(--blue);
+    padding: 5rem 5vw;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .cta-section::before {
+    content: 'TEAM4'; font-family: var(--font);
+    font-size: 22vw; font-weight: 800; color: rgba(255,255,255,0.06);
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    white-space: nowrap; pointer-events: none;
+    letter-spacing: -0.05em;
+  }
+  .cta-section .section-tag { color: rgba(255,255,255,0.6); }
+  .cta-section .section-title { color: #fff; }
+  .cta-section p { color: rgba(255,255,255,0.75); font-size: 1rem; line-height: 1.7; margin-bottom: 2rem; }
+  .btn-white {
+    background: #fff; color: var(--blue);
+    font-weight: 700; font-size: 1rem;
+    padding: 1rem 2.8rem; border-radius: 50px; border: none;
+    cursor: pointer; text-decoration: none;
+    display: inline-block;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .btn-white:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(0,0,0,0.2); }
+
+  /* FOOTER */
+  footer {
+    background: var(--surface);
+    padding: 3rem 5vw;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1.5rem;
+  }
+  .footer-logo {
+    font-family: var(--font); font-size: 1.1rem; font-weight: 800;
+    letter-spacing: -0.01em; color: var(--text);
+    text-decoration: none;
+  }
+  .footer-logo span { color: var(--blue); }
+  footer p { font-size: 0.8rem; color: var(--muted); }
+  .footer-links { display: flex; gap: 1.5rem; }
+  .footer-links a {
+    font-size: 0.8rem; color: var(--muted);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+
+  /* SCROLL REVEAL */
+  .reveal {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .hero-stats { gap: 1.5rem; }
+    footer { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#"><span>Team4</span> Banking</a>
+  <ul class="nav-links">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#rewards">Rewards</a></li>
+    <li><a href="#businesses">Businesses</a></li>
+    <li><a href="#why">Why us</a></li>
+  </ul>
+  <a class="nav-cta" href="/signup">Get started</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-circle c1"></div>
+  <div class="hero-bg-circle c2"></div>
+  <div class="hero-tag">Aberdeen's own bank</div>
+  <h1>
+    SPEND LOCAL.<br>
+    <span class="blue">EARN</span>
+    <span class="stroke"> MORE.</span>
+  </h1>
+  <p class="hero-sub">
+    A bank built for Aberdeen's 16–30s. Every time you use your card, you earn points — with us and with the local businesses you already love.
+  </p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="/signup">Open an account</a>
+    <a class="btn-ghost" href="#how">See how it works</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="stat-num">0%</div>
+      <div class="stat-label">Monthly fees</div>
+    </div>
+    <div>
+      <div class="stat-num">2X</div>
+      <div class="stat-label">Points on local spend</div>
+    </div>
+    <div>
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Aberdeen-focused</div>
+    </div>
+    <div>
+      <div class="stat-num">1 card</div>
+      <div class="stat-label">All your rewards in one place</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="reveal">
+    <div class="section-tag">How it works</div>
+    <div class="section-title">Simple as it gets</div>
+    <p class="section-sub">Sign up, spend normally, earn points. No apps to juggle, no loyalty cards to lose.</p>
+  </div>
+  <div class="how-grid reveal">
+    <div class="how-step">
+      <div class="step-num">01</div>
+      <div class="step-icon">📋</div>
+      <h3>Sign up in minutes</h3>
+      <p>Create an account online in under 5 minutes. No branch visits, no paperwork, no nonsense.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num">02</div>
+      <div class="step-icon">💳</div>
+      <h3>Use your card</h3>
+      <p>Pay for anything — coffee, food, nights out — and earn TEAM4 points automatically on every purchase.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num">03</div>
+      <div class="step-icon">⭐</div>
+      <h3>Earn business points too</h3>
+      <p>Businesses on our platform have their own points scheme. Spend at them and earn both kinds at once.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num">04</div>
+      <div class="step-icon">🎁</div>
+      <h3>Redeem for real rewards</h3>
+      <p>Free food, discounts, exclusive deals. Swap your points for things you actually want.</p>
+    </div>
+  </div>
+</section>
+
+<!-- DUAL REWARDS -->
+<section class="rewards" id="rewards">
+  <div class="reveal">
+    <div class="section-tag">Two reward streams</div>
+    <div class="section-title">Bank points.<br>Business points.</div>
+    <p class="section-sub">Think of it like McDonald's points — but instead of one restaurant, it's Aberdeen's entire local scene. All in your bank.</p>
+  </div>
+  <div class="rewards-layout reveal">
+    <div class="reward-card bank">
+      <div class="reward-card-tag">TEAM4 bank points</div>
+      <h3>Earn just by banking</h3>
+      <p>Every card purchase earns TEAM4 points regardless of where you spend. Use them across any reward we offer.</p>
+      <div class="reward-examples">
+        <div class="reward-pill">Cashback on your balance</div>
+        <div class="reward-pill">Free card upgrades</div>
+        <div class="reward-pill">Account perks &amp; bonuses</div>
+        <div class="reward-pill">Partner vouchers</div>
+      </div>
+    </div>
+    <div class="reward-card biz">
+      <div class="reward-card-tag">Local business points</div>
+      <h3>Earn at your favourite spots</h3>
+      <p>Registered Aberdeen businesses run their own in-app points programmes — like a loyalty card, built into your bank account.</p>
+      <div class="reward-examples">
+        <div class="reward-pill">Free food &amp; drinks</div>
+        <div class="reward-pill">Exclusive discounts</div>
+        <div class="reward-pill">Early access &amp; events</div>
+        <div class="reward-pill">Buy 9 get 1 free — automatically</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUSINESSES -->
+<section class="businesses" id="businesses">
+  <div class="reveal">
+    <div class="section-tag">Aberdeen local scene</div>
+    <div class="section-title">Your city,<br>your rewards</div>
+    <p class="section-sub">From coffee shops to late night bites — local Aberdeen businesses on TEAM4 let you build points without thinking about it.</p>
+  </div>
+  <div class="biz-grid reveal">
+    <div class="biz-card">
+      <div class="biz-icon">☕</div>
+      <h4>Coffee shops</h4>
+      <span>Points on every cup</span>
+    </div>
+    <div class="biz-card">
+      <div class="biz-icon">🍕</div>
+      <h4>Restaurants</h4>
+      <span>Free meals await</span>
+    </div>
+    <div class="biz-card">
+      <div class="biz-icon">🍺</div>
+      <h4>Bars &amp; pubs</h4>
+      <span>Rounds on the house</span>
+    </div>
+    <div class="biz-card">
+      <div class="biz-icon">💇</div>
+      <h4>Barbers &amp; salons</h4>
+      <span>Free cuts, free trims</span>
+    </div>
+    <div class="biz-card">
+      <div class="biz-icon">🛍️</div>
+      <h4>Clothing &amp; shops</h4>
+      <span>Discounts stacked up</span>
+    </div>
+    <div class="biz-card">
+      <div class="biz-icon">🏋️</div>
+      <h4>Gyms &amp; fitness</h4>
+      <span>Earn while you train</span>
+    </div>
+    <div class="biz-card">
+      <div class="biz-icon">🎮</div>
+      <h4>Entertainment</h4>
+      <span>Nights out rewarded</span>
+    </div>
+    <div class="biz-card">
+      <div class="biz-icon">🥗</div>
+      <h4>Takeaways</h4>
+      <span>Free meals stack up fast</span>
+    </div>
+  </div>
+  <div class="biz-note reveal">
+    <p><strong>Own a business in Aberdeen?</strong> Join TEAM4 and set up your own rewards programme — free to list, no monthly fees, instant access to thousands of customers.</p>
+    <a href="/signup">Register your business</a>
+  </div>
+</section>
+
+<!-- WHY -->
+<section class="why" id="why">
+  <div class="reveal">
+    <div class="section-tag">Why TEAM4</div>
+    <div class="section-title">Built different</div>
+    <p class="section-sub">Not another big bank. Not another loyalty app. Something new — built for Aberdeen, by Aberdeen.</p>
+  </div>
+  <div class="why-grid reveal">
+    <div class="why-card">
+      <div class="why-icon">📍</div>
+      <h4>100% local focus</h4>
+      <p>We're based in Aberdeen and built this for Aberdeen. Every feature is designed around how people here actually live and spend.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">💸</div>
+      <h4>No hidden fees</h4>
+      <p>No monthly account fees, no minimum balance, no surprises. Banking that doesn't cost you for existing.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🎯</div>
+      <h4>One app, all rewards</h4>
+      <p>No more juggling 10 different loyalty apps. Every points scheme from every business lives in your TEAM4 account.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">⚡</div>
+      <h4>Instant sign-up</h4>
+      <p>Open an account in under 5 minutes, straight from your phone. Your card details are ready to use immediately.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🔒</div>
+      <h4>Safe &amp; secure</h4>
+      <p>Your money and your data are protected. Bcrypt encryption, secure authentication, and your details never leave our servers.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🤝</div>
+      <h4>Supports local</h4>
+      <p>Every time you earn points at a local business, you're putting money back into Aberdeen's economy. Good for you, good for the city.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-tag reveal">Ready?</div>
+  <div class="section-title reveal">Stop leaving<br>points on the table.</div>
+  <p class="reveal">Join Aberdeen's bank that actually rewards you. Free to sign up, free to use, and your first points start the moment you make your first purchase.</p>
+  <a class="btn-white reveal" href="/signup">Open your account — it's free</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a class="footer-logo" href="#"><span>Team4</span> Banking</a>
+  <div class="footer-links">
+    <a href="#">About</a>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+  <p>© 2025 TEAM4 Banking. Aberdeen, Scotland.</p>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
