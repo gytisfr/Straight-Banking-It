@@ -2,15 +2,11 @@ import './App.css';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
-import Tracker from './pages/Home';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import RoutesPage from './pages/Routes';
-import ClientsPage from './pages/Clients';
-import DriversPage from './pages/Drivers';
-import TrucksPage from './pages/Trucks';
 
 function AppWrapper() {
   const location = useLocation();
@@ -43,46 +39,21 @@ function AppWrapper() {
         <Route
           path='/'
           element={
-            <ProtectedRoute>
-              <Tracker />
-            </ProtectedRoute>
+              <Home />
           }
         />
-        <Route
+
+        {/* <Route
           path='/routes'
           element={
             <ProtectedRoute>
               <RoutesPage />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path='/clients'
-          element={
-            <ProtectedRoute>
-              <ClientsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path='/drivers'
-          element={
-            <ProtectedRoute>
-              <DriversPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path='/trucks'
-          element={
-            <ProtectedRoute>
-              <TrucksPage />
-            </ProtectedRoute>
-          }
-        />
+        /> */}
 
         {/* Fallback route */}
-        <Route path='*' element={<div className='w-full h-full bg-slate-200'><h1>Page Not Found 404</h1></div>} />
+        <Route path='*' element={<div className='w-full h-full flex justify-center items-center'><h1>Page Not Found 404</h1></div>} />
       </Routes>
 
       {!hideNavFooter && <Footer />}
