@@ -95,6 +95,8 @@ def create(table : str, struct):
             while exists:
                 struct.id = uuid.uuid4()
                 exists = check("transactions", struct.id)
+            
+            struct.dateTaken = datetime.datetime.now().timestamp()
 
     if not query:
         listed = encode(struct.listise())
