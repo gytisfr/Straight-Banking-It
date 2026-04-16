@@ -274,3 +274,12 @@ class Loan:
         if result == True:
             return {"code": 200}
         return {"code": 400, "error": result}
+
+class Authentication:
+    pass
+
+
+
+import uvicorn
+
+uvicorn.run(api, host="0.0.0.0", port=5089)

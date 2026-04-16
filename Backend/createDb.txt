@@ -1,9 +1,9 @@
 CREATE TABLE users (
-    id integer primary key,
+    id integer primary key autoincrement,
     name text not null,
     email text not null,
     password text not null,
-    securityQ text not null,
+    securityQ int not null,
     securityA text not null,
     token text
 );

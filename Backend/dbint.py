@@ -196,32 +196,26 @@ def delete(table : str, id):
     connection.close()
 
     return True
-"""
-id
-name
-email
-password
-securityQ
-securityA
-token
-"""
-class User:
-    #def create(name : str, email : str, password : str, securityQ : int, securityA : str):
-    def create(username : str, password : str):
-        username = encode(username)
 
-        hash = encode(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
+
+
+class User:
+    def create(name : str, email : str, password : str, securityQ : int, securityA : str):
+        name, email, securityQ = encode([name, email, securityQ.lower()])
+
+        passwordHash = encode(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
+        securityAHash = encode(bcrypt.hashpw(securityA.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
 
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
         try:
-            cursor.execute(f"insert into users(username, password) values('{username}', '{hash}');")
+            cursor.execute(f"insert into users(name, email, password, securityQ, securityA) values('{name}', '{email}', '{passwordHash}', {securityQ}, '{securityAHash}');")
         except Exception as e:
             return str(type(e)).removeprefix("<class '").removesuffix("'>") + ": " + str(e)
         connection.commit()
         connection.close()
 
-        id = User.from_username(username)
+        id = User.from_email(decode(email))
 
         preToken = {"id": id, "timestamp": datetime.datetime.now().timestamp()}
         token = jwt.encode(preToken, secret, algorithm="HS256")
@@ -240,51 +234,48 @@ class User:
     def read(id : int):
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
-        result = cursor.execute(f"select username from users where id = {id};").fetchall()
+        result = cursor.execute(f"select name, email from users where id = {id};").fetchall()
         connection.close()
 
         if not result:
             return False
 
-        result = decode(result[0][0])
+        result = decode(result[0])
 
         return result
     
     def check(id : int):
         result = User.read(id)
-
-        if type(result) == str:
-            return bool(result)
     
-        return result
+        return bool(result)
     
-    def from_username(username : str):
-        username = encode(username)
+    def from_email(email : str):
+        email = encode(email)
 
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
-        result = cursor.execute(f"select id from users where username = '{username}';").fetchall()
+        result = cursor.execute(f"select id, name from users where email = '{email}';").fetchall()
         connection.close()
 
         if not result:
             return False
 
-        return result[0][0]
+        return result[0]
     
-    def check_from_username(username : str):
-        result = User.from_username(username)
-
-        if type(result) == str:
-            return bool(result)
+    def check_from_email(email : str):
+        result = User.from_email(email)
     
-        return result
+        return bool(result)
     
     def update(id : int, what : str, to):
         what = what.lower()
 
-        if what != "username":
+        if what not in ["name", "email", "password"]:
             return f"AttributeError: No such column '{what}' in users table"
         
+        if what == "password":
+            to = encode(bcrypt.hashpw(to.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
+
         to = encode(to)
         
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
