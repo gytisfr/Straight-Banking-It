@@ -229,7 +229,7 @@ class User:
         connection.commit()
         connection.close()
         
-        return [token]
+        return [id, token]
     
     def read(id : int):
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
@@ -249,7 +249,7 @@ class User:
     
         return bool(result)
     
-    def from_email(email : str):
+    def read_from_email(email : str):
         email = encode(email)
 
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
@@ -263,7 +263,7 @@ class User:
         return result[0]
     
     def check_from_email(email : str):
-        result = User.from_email(email)
+        result = User.read_from_email(email)
     
         return bool(result)
     

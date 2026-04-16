@@ -425,61 +425,6 @@ class Authentication:
             return {"code": 401}
         return {"code": 400, "error": result}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@api.get("/", tags=["Root"])
-def root():
-    return {"code": 200}
-
-class Users:
-    @api.post("/users", tags=["Users"])
-    def create_user():
-        return {"code": 200}
-    
-    @api.get("/users", tags=["Users"])
-    def read_user():
-        return {"code": 200}
-    
-    @api.get("/users/check", tags=["Users"])
-    def check_user():
-        return {"code": 200}
-    
-    @api.get("/users/fetch", tags=["Users"])
-    def fetch_users():
-        return {"code": 200}
-    
-    @api.patch("/users", tags=["Users"])
-    def update_user():
-        return {"code": 200}
-    
-    @api.delete("/users", tags=["Users"])
-    def delete_user():
-        return {"code": 200}
-
-class Accounts:
-    pass
-
-class Transactions:
-    pass
-
-class Loans:
-    pass
-
 class Authentication:
     @api.post("/auth/login", tags=["Authentication"])
     def login(username : str, password : str):

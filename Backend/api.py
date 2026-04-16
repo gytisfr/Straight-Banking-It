@@ -18,7 +18,98 @@ def root():
     return {"code": 200}
 
 class User:
-    pass
+    @api.post("/users", tags=["Users"])
+    def create_user(name : str, email : str, password : str, securityQ : int, securityA : str):
+        exists = dbint.User.from_email(email)
+        if exists:
+            return {"code": 400, "error": f"IntegrityError: A client with provided email already exists"}
+        
+        result = dbint.User.create(name, email, password, securityQ, securityA)
+        if type(result) != list:
+            return {"code": 400, "error": result}
+        return {"code": 201, "createdUser": {"id": result[0], "token": result[1]}}
+    
+    @api.get("/users", tags=["Users"])
+    def read_user(id : int): #, token : str=Header(default=None)
+        """
+        token = dbint.Authentication.validate(token)
+        if not token:
+            return {"code": 401}
+        """
+        
+        result = dbint.User.read(id)
+        if result:
+            return {"code": 200, "requestedUser": {"name": result[0], "email": result[1]}}
+        return {"code": 404, "error": result}
+    
+    @api.get("/users/check", tags=["Users"])
+    def check_user(id : int): #, token : str=Header(default=None)
+        """
+        token = dbint.Authentication.validate(token)
+        if not token:
+            return {"code": 401}
+        """
+        
+        result = dbint.User.check(id)
+        return {"code": 200 if result else 404}
+    
+    @api.get("/users/from_email", tags=["Users"])
+    def read_user_from_email(id : int): #, token : str=Header(default=None)
+        """
+        token = dbint.Authentication.validate(token)
+        if not token:
+            return {"code": 401}
+        """
+        
+        result = dbint.User.read_from_email(id)
+        if result:
+            return {"code": 200, "requestedUser": {"id": result[0], "name": result[1]}}
+        return {"code": 404, "error": result}
+    
+    @api.get("/users/check/from_email", tags=["Users"])
+    def check_user_from_email(email : str): #, token : str=Header(default=None)
+        """
+        token = dbint.Authentication.validate(token)
+        if not token:
+            return {"code": 401}
+        """
+        
+        result = dbint.User.check_from_email(email)
+        return {"code": 200 if result else 404}
+    
+    @api.patch("/users", tags=["Users"])
+    def update_user(id : int, what : str, to): #, token : str=Header(default=None)
+        """
+        token = dbint.Authentication.validate(token)
+        if not token:
+            return {"code": 401}
+        """
+        
+        exists = dbint.User.check(id)
+        if not exists:
+            return {"code": 404}
+        
+        result = dbint.User.update(id, what, to)
+        if result == True:
+            return {"code": 200}
+        return {"code": 400, "error": result}
+    
+    @api.delete("/users", tags=["Users"])
+    def delete_user(id : int): #, token : str=Header(default=None)
+        """
+        token = dbint.Authentication.validate(token)
+        if not token:
+            return {"code": 401}
+        """
+        
+        exists = dbint.User.check(id)
+        if not exists:
+            return {"code": 404}
+        
+        result = dbint.User.delete(id)
+        if result == True:
+            return {"code": 200}
+        return {"code": 400, "error": result}
 
 class Account:
     @api.post("/account", tags=["Account"])
