@@ -304,7 +304,7 @@ class User:
 class Authentication:
     def login(email : str, password : str):
 
-        email = encode(email)
+        email, password = encode([email, password])
 
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
@@ -336,20 +336,10 @@ class Authentication:
         return [token]
     
     def logout(token : str):
-        token = encode(token)
-
-        connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
-        cursor = connection.cursor()
-        id = cursor.execute(f"select id from users where token = '{token}';").fetchall()
-        connection.close()
-
-        if not id:
-            return False
-
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
         try:
-            cursor.execute(f"update users set token = '' where id = {id[0][0]};")
+            cursor.execute(f"update users set token = '' where token = '{encode(token)}';")
         except Exception as e:
             return str(type(e)).removeprefix("<class '").removesuffix("'>") + ": " + str(e)
         connection.commit()
@@ -362,7 +352,7 @@ class Authentication:
 
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
-        id = cursor.execute(f"select id, username from users where token = '{token}';").fetchall()
+        id = cursor.execute(f"select id, name, email from users where token = '{token}';").fetchall()
         connection.close()
 
         if not id:
