@@ -288,6 +288,37 @@ class User:
         connection.close()
 
         return True
+
+    def update_password(id : int, password : str, securityA : str):
+        password, securityA = encode([password, securityA.lower()])
+
+        connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
+        cursor = connection.cursor()
+        user = cursor.execute(f"select securityA from users where id = {id};").fetchall()
+        connection.close()
+
+        if not user:
+            return False
+
+        securityAMatch = bcrypt.checkpw(securityA.encode("utf-8"), user[0][0].encode("utf-8"))
+
+        if not securityAMatch:
+            return False
+
+        passwordHash = encode(bcrypt.hashpw(encode(password).encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
+        preToken = {"id": id, "timestamp": datetime.datetime.now().timestamp()}
+        token = jwt.encode(preToken, secret, algorithm="HS256")
+
+        connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
+        cursor = connection.cursor()
+        try:
+            cursor.execute(f"update users set password = {passwordHash}, token = '{encode(token)}' where id = {id};")
+        except Exception as e:
+            return str(type(e)).removeprefix("<class '").removesuffix("'>") + ": " + str(e)
+        connection.commit()
+        connection.close()
+
+        return [token]
     
     def delete(id : int):
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
@@ -303,7 +334,6 @@ class User:
 
 class Authentication:
     def login(email : str, password : str):
-
         email, password = encode([email, password])
 
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
@@ -348,11 +378,9 @@ class Authentication:
         return True
     
     def validate(token : str):
-        token = encode(token)
-
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
-        id = cursor.execute(f"select id, name, email from users where token = '{token}';").fetchall()
+        id = cursor.execute(f"select id, name, email from users where token = '{encode(token)}';").fetchall()
         connection.close()
 
         if not id:
