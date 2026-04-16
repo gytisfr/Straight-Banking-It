@@ -1,18 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Payments from "@/components/Payments";
 import Accounts from "@/components/Accounts";
+import Loans from "@/components/Loans";
 
-const navItems = ["Overview", "Accounts", "Payments"];
-
-
-const accounts = [
-  { id: 1, balance: "£670.54", name: "Main Account" },
-  { id: 2, balance: "£1,892.02", name: "Savings Account" },
-  { id: 3, balance: "£726.45", name: "Bills Account" },
-  { id: 4, balance: "£480.44", name: "Spending Account" },
-  { id: 5, balance: "£5,234.48", name: "Business Account" },
-  { id: 6, balance: "£30,356.86", name: "Investment Account" },
-];
+const navItems = ["Overview", "Accounts", "Payments", "Loans"];
 
 const companies = [
   { id: 1, name: "BrewDog", icon: "🍺" },
@@ -27,6 +18,101 @@ export default function Home() {
 
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(null); // "deposit" | "withdraw"
+
+  const [accounts, setAccounts] = useState([]);
+
+  //transfer between accounts tab thing
+  const [transferType, setTransferType] = useState("internal");
+
+  const [payeeName, setPayeeName] = useState("");
+  const [sortCode, setSortCode] = useState("");
+
+  //form for withdraw deposit etc
+  const [selectedAccount, setSelectedAccount] = useState("");
+  const [amount, setAmount] = useState("");
+  const [toAccount, setToAccount] = useState("");
+  const [reference, setReference] = useState("");
+
+  const [loanAmount, setLoanAmount] = useState("");
+  const [loanPeriod, setLoanPeriod] = useState("");
+
+const fetchAccounts = async () => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch("http://127.0.0.1:5089/account/fetch", {
+      method: "GET",
+      headers: { token }
+    });
+
+    const data = await res.json();
+
+    if (data.code === 200) {
+      setAccounts(data.data);
+    } else {
+      console.error("Failed to fetch accounts");
+    }
+  } catch (err) {
+    console.error("Error fetching accounts:", err);
+  }
+};
+
+useEffect(() => {
+  fetchAccounts();
+}, []);
+
+const totalBalance = accounts.reduce((sum, acc) => {
+  return sum + Number(acc.balance || 0);
+}, 0);
+
+const createAccount = async () => {
+
+  console.log("clicked button");
+  const token = localStorage.getItem("token");
+
+  try {
+    // get user id from token validation
+    const userRes = await fetch("http://127.0.0.1:5089/auth/validate", {
+      method: "POST",
+      headers: {
+        token: token
+      }
+    });
+
+    const userData = await userRes.json();
+
+    if (userData.code !== 200) {
+      console.error("Invalid user");
+      return;
+    }
+
+    const userId = userData.requestedUser.id;
+
+    // create account
+    const res = await fetch(
+      `http://127.0.0.1:5089/account?parentUserId=${userId}`,
+      {
+        method: "POST",
+        headers: {
+          token: token
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.code === 200) {
+      console.log("Account created");
+
+      // 🔁 REFRESH ACCOUNTS
+    fetchAccounts();
+    } else {
+      console.error("Failed to create account", data);
+    }
+  } catch (err) {
+    console.error("Error creating account:", err);
+  }
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-100">
@@ -87,22 +173,24 @@ export default function Home() {
                 <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mb-1">
                   Total available amount
                 </p>
-                <h1 className="text-4xl font-extrabold text-slate-900">
-                  £1,900.23
-                </h1>
+              <h1 className="text-4xl font-extrabold text-slate-900">
+  £{totalBalance.toFixed(2)}
+</h1>
               </div>
 
               {/* Actions */}
               <div className="flex gap-4 mb-16">
-                {["Withdraw", "Deposit", "Make Payment"].map((action, i) => (
+                {["Withdraw", "Deposit", "Make Payment", "Loan"].map((action, i) => (
   <button
     key={i}
     onClick={() => {
       if (action === "Make Payment") {
-        setModalType("payment");
-      } else {
-        setModalType(action.toLowerCase());
-      }
+  setModalType("payment");
+} else if (action === "Loan") {
+  setModalType("loan");
+} else {
+  setModalType(action.toLowerCase());
+}
       setShowModal(true);
     }}
     className="flex-1 flex items-center gap-3 px-5 py-4 bg-white border border-slate-200 rounded-2xl hover:shadow-md hover:border-blue-200 hover:scale-[1.02] transition-all duration-200 group cursor-pointer"
@@ -118,21 +206,25 @@ export default function Home() {
               </div>
 
               {/* Accounts preview */}
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-slate-900">
-                  Accounts
-                </h2>
+<div className="flex items-center justify-between mb-6">
+  <h2 className="text-2xl font-bold text-slate-900">
+    Accounts
+  </h2>
 
-                <button
-                  onClick={() => setActiveNav("Accounts")}
-                  className="flex items-center gap-1 text-sm font-semibold text-blue-500 hover:text-blue-600 transition-all duration-200 group cursor-pointer"
-                >
-                  All accounts
-                  <span className="transition-transform group-hover:translate-x-1">
-                    →
-                  </span>
-                </button>
-              </div>
+  <div className="flex gap-3">
+    <button
+      onClick={createAccount}
+      className="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-semibold hover:bg-blue-600 transition cursor-pointer"
+    >+ New Account</button>
+
+    <button
+      onClick={() => setActiveNav("Accounts")}
+      className="flex items-center gap-1 text-sm font-semibold text-blue-500 hover:text-blue-600 transition-all duration-200 group cursor-pointer"
+    >
+      All accounts →
+    </button>
+  </div>
+</div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-16">
                 {accounts.slice(0, 3).map((acc) => (
@@ -144,8 +236,10 @@ export default function Home() {
                       $
                     </span>
                     <div>
-                      <p className="font-bold">{acc.balance}</p>
-                      <p className="text-sm text-slate-500">{acc.name}</p>
+                    <p className="font-bold">£{acc.balance}</p>
+<p className="text-sm text-slate-500">
+  Account {acc.accountNumber}
+</p>
                     </div>
                   </div>
                 ))}
@@ -219,9 +313,17 @@ export default function Home() {
             </>
           )}
 
+          {/* LOANS  */}
+          {activeNav === "Loans" && <Loans />}
+
           {/* ================= ACCOUNTS ================= */}
           {activeNav === "Accounts" && (
-            <Accounts accounts={accounts} />
+          <Accounts
+  accounts={accounts}
+  setShowModal={setShowModal}
+  setModalType={setModalType}
+  setSelectedAccount={setSelectedAccount}
+/>
           )}
 
           {/* ================= PAYMENTS ================= */}
@@ -242,104 +344,222 @@ export default function Home() {
 
       {/* Title */}
       <h2 className="text-xl font-bold mb-4">
-        {modalType === "payment"
-          ? "Make Payment"
-          : modalType === "deposit"
-          ? "Deposit Funds"
-          : "Withdraw Funds"}
+      {modalType === "payment"
+  ? "Make Payment"
+  : modalType === "deposit"
+  ? "Deposit Funds"
+  : modalType === "withdraw"
+  ? "Withdraw Funds"
+  : "Apply for Loan"}
       </h2>
+
+{modalType === "payment" && (
+  <div className="flex gap-2 mb-4">
+    <button
+      onClick={() => setTransferType("internal")}
+      className={`px-3 py-1 rounded-lg ${
+        transferType === "internal" ? "bg-blue-500 text-white" : "bg-slate-100"
+      }`}
+    >
+      My Accounts
+    </button>
+
+    <button
+      onClick={() => setTransferType("external")}
+      className={`px-3 py-1 rounded-lg ${
+        transferType === "external" ? "bg-blue-500 text-white" : "bg-slate-100"
+      }`}
+    >
+      External
+    </button>
+  </div>
+)}
 
       {/* ================= PAYMENT FORM ================= */}
       {modalType === "payment" && (
         <>
           {/* From account */}
           <div className="mb-4">
-            <label className="text-sm text-slate-500">From Account</label>
-            <select className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl">
-              {accounts.map((acc) => (
-                <option key={acc.id}>
-                  {acc.name} ({acc.balance})
-                </option>
-              ))}
-            </select>
+          <label className="text-sm text-slate-500">From Account</label>
+<select
+  value={selectedAccount}
+  onChange={(e) => setSelectedAccount(e.target.value)}
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+>
+  <option value="">Select account</option>
+  {accounts.map((acc) => (
+    <option key={acc.accountNumber} value={acc.accountNumber}>
+      Account {acc.accountNumber} (£{acc.balance})
+    </option>
+  ))}
+</select>
           </div>
+
+{transferType === "internal" && (
+      <div className="mb-4">
+        <label className="text-sm text-slate-500">To Account</label>
+        <select
+          value={toAccount}
+          onChange={(e) => setToAccount(e.target.value)}
+          className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+        >
+          <option value="">Select destination account</option>
+          {accounts
+            .filter(acc => acc.accountNumber !== selectedAccount)
+            .map((acc) => (
+              <option key={acc.accountNumber} value={acc.accountNumber}>
+                Account {acc.accountNumber} (£{acc.balance})
+              </option>
+            ))}
+        </select>
+      </div>
+    )}
 
           {/* Payee name */}
-          <div className="mb-4">
-            <label className="text-sm text-slate-500">Payee Name</label>
-            <input
-              type="text"
-              placeholder="e.g. John Smith"
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
-            />
-          </div>
+{transferType === "external" && (
+  <div className="mb-4">
+    <label className="text-sm text-slate-500">Payee Name</label>
+  <input
+  type="text"
+  value={payeeName}
+  onChange={(e) => setPayeeName(e.target.value)}
+  placeholder="e.g. John Smith"
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+/>
+  </div>
+)}
 
-          {/* Sort code */}
-          <div className="mb-4">
-            <label className="text-sm text-slate-500">Sort Code</label>
-            <input
-              type="text"
-              placeholder="12-34-56"
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
-            />
-          </div>
+{transferType === "external" && (
+  <>
+    {/* Sort code */}
+    <div className="mb-4">
+      <label className="text-sm text-slate-500">Sort Code</label>
+    <input
+  type="text"
+  value={sortCode}
+  onChange={(e) => setSortCode(e.target.value)}
+  placeholder="12-34-56"
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+/>
+    </div>
 
-          {/* Account number */}
-          <div className="mb-4">
-            <label className="text-sm text-slate-500">Account Number</label>
-            <input
-              type="text"
-              placeholder="12345678"
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
-            />
-          </div>
+    {/* Account number */}
+    <div className="mb-4">
+      <label className="text-sm text-slate-500">Account Number</label>
+      <input
+        type="number"
+        value={toAccount}
+        onChange={(e) => setToAccount(e.target.value)}
+        placeholder="12345678"
+        className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+      />
+    </div>
+  </>
+)}
 
           {/* Reference */}
           <div className="mb-4">
             <label className="text-sm text-slate-500">Reference</label>
-            <input
-              type="text"
-              placeholder="e.g. Rent April"
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
-            />
+          <input
+  type="text"
+  value={reference}
+  onChange={(e) => setReference(e.target.value)}
+  placeholder="e.g. Rent April"
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+/>
           </div>
 
           {/* Amount */}
           <div className="mb-6">
             <label className="text-sm text-slate-500">Amount</label>
-            <input
-              type="number"
-              placeholder="Enter amount"
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
-            />
+          <input
+  type="number"
+  value={amount}
+  onChange={(e) => setAmount(e.target.value)}
+  placeholder="Enter amount"
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+/>
           </div>
         </>
       )}
 
       {/* ================= DEPOSIT / WITHDRAW ================= */}
-      {modalType !== "payment" && (
+        {modalType !== "payment" && modalType !== "loan" && (
         <>
           <div className="mb-4">
             <label className="text-sm text-slate-500">Select Account</label>
-            <select className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl">
-              {accounts.map((acc) => (
-                <option key={acc.id}>
-                  {acc.name} ({acc.balance})
-                </option>
-              ))}
-            </select>
+          <select
+  value={selectedAccount}
+  onChange={(e) => setSelectedAccount(e.target.value)}
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+>
+  <option value="">Select account</option>
+  {accounts.map((acc) => (
+    <option key={acc.accountNumber} value={acc.accountNumber}>
+      Account {acc.accountNumber} (£{acc.balance})
+    </option>
+  ))}
+</select>
           </div>
 
           <div className="mb-6">
             <label className="text-sm text-slate-500">Amount</label>
-            <input
-              type="number"
-              placeholder="Enter amount"
-              className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
-            />
+          <input
+  type="number"
+  value={amount}
+  onChange={(e) => setAmount(e.target.value)}
+  placeholder="Enter amount"
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+/>
           </div>
         </>
       )}
+
+      {modalType === "loan" && (
+  <>
+    <div className="mb-4">
+      <label className="text-sm text-slate-500">Select Account</label>
+    <select
+  value={selectedAccount}
+  onChange={(e) => setSelectedAccount(e.target.value)}
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+>
+  <option value="">Select account</option>
+  {accounts.map((acc) => (
+    <option key={acc.accountNumber} value={acc.accountNumber}>
+      Account {acc.accountNumber} (£{acc.balance})
+    </option>
+  ))}
+</select>
+    </div>
+
+    <div className="mb-4">
+      <label className="text-sm text-slate-500">Loan Amount</label>
+    <input
+  type="number"
+  value={loanAmount}
+  onChange={(e) => setLoanAmount(e.target.value)}
+  placeholder="Enter amount"
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+/>
+    </div>
+
+    <div className="mb-4">
+      <label className="text-sm text-slate-500">Repayment Period (months)</label>
+    <input
+  type="number"
+  value={loanPeriod}
+  onChange={(e) => setLoanPeriod(e.target.value)}
+  placeholder="Enter amount"
+  className="w-full mt-1 px-3 py-2 border border-slate-200 rounded-xl"
+/>
+    </div>
+
+    <div className="mb-6 text-sm text-slate-500">
+      Estimated interest: <span className="font-semibold">5%</span>
+    </div>
+  </>
+)}
 
       {/* Actions */}
       <div className="flex justify-end gap-3">
@@ -353,15 +573,102 @@ export default function Home() {
           Cancel
         </button>
 
-        <button
-          onClick={() => {
-            setShowModal(false);
-            setModalType(null);
-          }}
-          className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600"
-        >
-          Confirm
-        </button>
+      <button
+onClick={async () => {
+if (modalType === "loan") {
+  if (!selectedAccount || !loanAmount || !loanPeriod) {
+    alert("Please fill all fields");
+    return;
+  }
+} else {
+  if (!selectedAccount || !amount) {
+    alert("Please fill all fields");
+    return;
+  }
+}
+
+if (modalType === "payment") {
+  if (transferType === "internal" && selectedAccount === toAccount) {
+    alert("Cannot transfer to same account");
+    return;
+  }
+
+  if (transferType === "internal" && !toAccount) {
+    alert("Select destination account");
+    return;
+  }
+
+if (transferType === "external" && (!toAccount || !sortCode || !payeeName)) {
+  alert("Fill all external transfer details");
+  return;
+}
+
+  if (!reference) {
+    alert("Enter reference");
+    return;
+  }
+}
+
+  const token = localStorage.getItem("token");
+
+try {
+  let url = "";
+  const amountNum = Number(amount);
+
+  if (modalType === "deposit") {
+    url = `http://127.0.0.1:5089/account/deposit?accountNumber=${selectedAccount}&amount=${amountNum}`;
+
+  } else if (modalType === "withdraw") {
+    url = `http://127.0.0.1:5089/account/withdraw?accountNumber=${selectedAccount}&amount=${amountNum}`;
+
+  } else if (modalType === "payment") {
+    if (transferType === "internal") {
+      url = `http://127.0.0.1:5089/account/transfer?fromAccount=${selectedAccount}&toAccount=${toAccount}&amount=${amountNum}&reference=${reference}`;
+    } else {
+      url = `http://127.0.0.1:5089/account/transfer?fromAccount=${selectedAccount}&toAccount=${toAccount}&amount=${amountNum}&reference=${reference}`;
+    }
+
+  } else if (modalType === "loan") {
+    url = `http://127.0.0.1:5089/loan?accountNumber=${selectedAccount}&amount=${loanAmount}&months=${loanPeriod}`;
+  }
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { token }
+  });
+
+  const data = await res.json();
+
+      if (res.status >= 200 && res.status < 300) {
+        console.log("REAL STATUS:", res.status);
+      fetchAccounts();
+
+      // reset form ONLY on success
+  setSelectedAccount("");
+  setToAccount("");
+  setAmount("");
+  setReference("");
+  setPayeeName("");
+setSortCode("");
+setLoanAmount("");
+setLoanPeriod("");
+  setTransferType("internal");
+
+    setShowModal(false);
+    setModalType(null);
+      } else {
+        console.error(data);
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+
+  }}
+  className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white hover:bg-blue-600"
+>
+  Confirm
+</button>
       </div>
 
     </div>

@@ -1,7 +1,7 @@
 import sqlite3, bcrypt, datetime, random, typing, jwt, uuid, os
 import structs, card
 
-os.chdir("\\".join(__file__.split("\\")[:-1]))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 chars = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 nums = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
@@ -58,70 +58,93 @@ def checkTypesMatch(table : str, data : list):
 
 
 
-def create(table : str, struct):
+def create(table: str, struct):
     match table:
         case "accounts":
+            # Generate unique account number
             struct.accountNumber = random.randint(11111111, 19999999)
-            exists = check("accounts", struct.id)
-
+            exists = check("accounts", struct.accountNumber)
             while exists:
                 struct.accountNumber = random.randint(11111111, 19999999)
-                exists = check("accounts", struct.id)
-            
+                exists = check("accounts", struct.accountNumber)
+
+            # Generate unique card number
             struct.cardNumber = card.generate()
             exists = checkCardNumbers(struct.cardNumber)
-
             while exists:
                 struct.cardNumber = card.generate()
                 exists = checkCardNumbers(struct.cardNumber)
-            
+
+            # Expiry + CVV
             rn = datetime.datetime.now()
             struct.expiryMonth = rn.month
             struct.expiryYear = rn.year + 5
-            struct.cvv = f"{random.randint(0,9)}{random.randint(0,9)}{random.randint(0,9)}"
+            struct.cvv = random.randint(100, 999)  # ✅ FIXED (int not string)
+
         case "transactions":
-            struct.id = uuid.uuid4()
+            struct.id = str(uuid.uuid4())
             exists = check("transactions", struct.id)
-
             while exists:
-                struct.id = uuid.uuid4()
+                struct.id = str(uuid.uuid4())
                 exists = check("transactions", struct.id)
-            
+
             struct.date = datetime.datetime.now().timestamp()
-        case "loans":
-            struct.id = uuid.uuid4()
-            exists = check("transactions", struct.id)
 
+        case "loans":
+            struct.id = str(uuid.uuid4())
+            exists = check("loans", struct.id)  # ✅ FIXED (was checking transactions)
             while exists:
-                struct.id = uuid.uuid4()
-                exists = check("transactions", struct.id)
-            
+                struct.id = str(uuid.uuid4())
+                exists = check("loans", struct.id)
+
             struct.dateTaken = datetime.datetime.now().timestamp()
 
-    if not query:
-        listed = encode(struct.listise())
-        query = f"""insert into {table} values({', '.join(["'" + attribute + "'" if type(attribute) == str else 'null' if attribute == None else str(attribute) for attribute in listed])});"""
+    # ✅ ALWAYS BUILD QUERY (removed broken "if not query")
+    listed = encode(struct.listise())
+
+    columns = [col["name"] for col in structs.types[table]]
+
+    query = f"""
+    INSERT INTO {table} ({', '.join(columns)})
+    VALUES ({', '.join([
+        "'" + str(attribute) + "'" if type(attribute) == str 
+        else 'null' if attribute is None 
+        else str(attribute)
+        for attribute in listed
+    ])});
+    """
 
     connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
     cursor = connection.cursor()
+
     try:
         cursor.execute(query)
     except Exception as e:
+        print("❌ DB ERROR:", e)   # 👈 ADD THIS LINE
+        print("❌ QUERY:", query)  # 👈 ADD THIS TOO (VERY USEFUL)
+        connection.close()
         return str(type(e)).removeprefix("<class '").removesuffix("'>") + ": " + str(e)
+
     connection.commit()
     connection.close()
 
+    # ✅ RETURN CORRECT ID
     return [struct.id] if table != "accounts" else [struct.accountNumber]
 
-def read(table : str, id):
+def read(table: str, id):
     id = encode(id)
-    idType = structs.types[table][0]["type"]
+    column = "id" if table != "accounts" else "accountNumber"
 
     connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
     cursor = connection.cursor()
-    result = cursor.execute(f"""select * from {table} where {"id" if table != "accounts" else "accountNumber"} = {"'" if type(id) == str else ""}{id}{"'" if type(id) == str else ""};""").fetchall()
+
+    result = cursor.execute(
+        f"SELECT * FROM {table} WHERE {column} = ?",
+        (str(id),)
+    ).fetchall()
+
     connection.close()
-    
+
     if not result:
         return False
 
@@ -153,6 +176,25 @@ def fetch(table : str):
 
     if result:
         result = [[decode(el) for el in attribute] for attribute in result]
+
+    return result
+
+def fetch_where(table: str, column: str, value):
+    value = encode(value)
+
+    connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
+    cursor = connection.cursor()
+
+    query = f"""
+    SELECT * FROM {table}
+    WHERE {column} = {"'" if isinstance(value, str) else ""}{value}{"'" if isinstance(value, str) else ""};
+    """
+
+    result = cursor.execute(query).fetchall()
+    connection.close()
+
+    if result:
+        result = [[decode(el) for el in row] for row in result]
 
     return result
 
@@ -201,7 +243,7 @@ def delete(table : str, id):
 
 class User:
     def create(name : str, email : str, password : str, securityQ : int, securityA : str):
-        name, email, securityQ = encode([name, email, securityQ.lower()])
+        name, email = encode([name, email])
 
         passwordHash = encode(bcrypt.hashpw(encode(password).encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
         securityAHash = encode(bcrypt.hashpw(encode(securityA).encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
@@ -215,7 +257,8 @@ class User:
         connection.commit()
         connection.close()
 
-        id = User.from_email(decode(email))
+        user = User.read_from_email(decode(email))
+        id = user[0] if user else None
 
         preToken = {"id": id, "timestamp": datetime.datetime.now().timestamp()}
         token = jwt.encode(preToken, secret, algorithm="HS256")

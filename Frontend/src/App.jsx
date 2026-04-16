@@ -39,7 +39,9 @@ function AppWrapper() {
         <Route
           path='/'
           element={
+            <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
           }
         />
 

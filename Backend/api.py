@@ -1,3 +1,4 @@
+import random
 import fastapi
 import structs, dbint
 from fastapi import Header
@@ -5,349 +6,404 @@ from fastapi.middleware.cors import CORSMiddleware
 
 api = fastapi.FastAPI()
 
+# ✅ CORS (cleaned a bit)
 api.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://172.20.10.5", "http://172.20.10.5/", "172.20.10.5", "172.20.10.5/", "http://172.20.10.5:50891", "http://172.20.10.5:50891/", "172.20.10.5:50891", "172.20.10.5:50891/"],
+    allow_origins=["http://localhost:5173", "http://0.0.0.0:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# =========================
+# ROOT
+# =========================
 @api.get("/", tags=["Root"])
 def root():
     return {"code": 200}
 
-class User:
-    @api.post("/users", tags=["Users"])
-    def create_user(name : str, email : str, password : str, securityQ : int, securityA : str):
-        exists = dbint.User.from_email(email)
-        if exists:
-            return {"code": 400, "error": f"IntegrityError: A client with provided email already exists"}
-        
-        result = dbint.User.create(name, email, password, securityQ, securityA)
-        if type(result) != list:
-            return {"code": 400, "error": result}
-        return {"code": 201, "createdUser": {"id": result[0], "token": result[1]}}
-    
-    @api.get("/users", tags=["Users"])
-    def read_user(id : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.User.read(id)
-        if result:
-            return {"code": 200, "requestedUser": {"name": result[0], "email": result[1]}}
-        return {"code": 404, "error": result}
-    
-    @api.get("/users/check", tags=["Users"])
-    def check_user(id : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.User.check(id)
-        return {"code": 200 if result else 404}
-    
-    @api.get("/users/from_email", tags=["Users"])
-    def read_user_from_email(id : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.User.read_from_email(id)
-        if result:
-            return {"code": 200, "requestedUser": {"id": result[0], "name": result[1]}}
-        return {"code": 404, "error": result}
-    
-    @api.get("/users/check/from_email", tags=["Users"])
-    def check_user_from_email(email : str, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.User.check_from_email(email)
-        return {"code": 200 if result else 404}
-    
-    @api.patch("/users", tags=["Users"])
-    def update_user(id : int, what : str, to, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        exists = dbint.User.check(id)
-        if not exists:
-            return {"code": 404}
-        
-        result = dbint.User.update(id, what, to)
-        if result == True:
-            return {"code": 200}
-        return {"code": 400, "error": result}
-    
-    @api.delete("/users", tags=["Users"])
-    def delete_user(id : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        exists = dbint.User.check(id)
-        if not exists:
-            return {"code": 404}
-        
-        result = dbint.User.delete(id)
-        if result == True:
-            return {"code": 200}
+
+# =========================
+# USERS
+# =========================
+@api.post("/users", tags=["Users"])
+def create_user(name: str, email: str, password: str, securityQ: int, securityA: str):
+    exists = dbint.User.check_from_email(email)
+
+    if exists:
+        return {"code": 400, "error": "User with this email already exists"}
+
+    result = dbint.User.create(name, email, password, securityQ, securityA)
+
+    if type(result) != list:
         return {"code": 400, "error": result}
 
-class Account:
-    @api.post("/account", tags=["Account"])
-    def create_account(parentUserId : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.create("accounts", structs.Account(0, parentUserId, 0, 0, "67-67-67", 0, 0, 0))
-        if type(result) == list:
-            return {"code": 200, "id": result[0]}
-        return {"code": 400, "error": result}
+    return {
+        "code": 201,
+        "createdUser": {
+            "id": result[0],
+            "token": result[1]
+        }
+    }
 
-    @api.get("/account", tags=["Account"])
-    def read_account(id : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.read("accounts", id)
-        if type(result) == list:
-            return {"code": 200, "data": dict(zip([column["name"] for column in structs.types["accounts"]], result))}
+
+@api.get("/users", tags=["Users"])
+def read_user(id: int, token: str = Header(default=None)):
+    token = dbint.Authentication.validate(token)
+    if not token:
+        return {"code": 401}
+
+    result = dbint.User.read(id)
+    if result:
+        return {"code": 200, "requestedUser": {"name": result[0], "email": result[1]}}
+
+    return {"code": 404}
+
+
+@api.get("/users/check", tags=["Users"])
+def check_user(id: int, token: str = Header(default=None)):
+    token = dbint.Authentication.validate(token)
+    if not token:
+        return {"code": 401}
+
+    result = dbint.User.check(id)
+    return {"code": 200 if result else 404}
+
+
+@api.get("/users/check/from_email", tags=["Users"])
+def check_user_from_email(email: str, token: str = Header(default=None)):
+    token = dbint.Authentication.validate(token)
+    if not token:
+        return {"code": 401}
+
+    result = dbint.User.check_from_email(email)
+    return {"code": 200 if result else 404}
+
+
+@api.patch("/users", tags=["Users"])
+def update_user(id: int, what: str, to, token: str = Header(default=None)):
+    token = dbint.Authentication.validate(token)
+    if not token:
+        return {"code": 401}
+
+    exists = dbint.User.check(id)
+    if not exists:
         return {"code": 404}
 
-    @api.get("/account/check", tags=["Account"])
-    def check_account(id : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.check("accounts", id)
-        if type(result) == str:
-            return {"code": 400, "error": result}
-        return {"code": 200 if result else 404}
+    result = dbint.User.update(id, what, to)
+    if result is True:
+        return {"code": 200}
 
-    @api.get("/account/fetch", tags=["Account"])
-    def fetch_account(): #token : str=Header(default=None)
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.fetch("accounts")
-        columns = [column["name"] for column in structs.types["accounts"]]
-        return {"code": 200, "data": [dict(zip(columns, account)) for account in result]}
+    return {"code": 400, "error": result}
 
-    @api.patch("/account", tags=["Account"])
-    def update_account(id : int, what : str, to, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        exists = dbint.check("accounts", id)
-        if not exists:
-            return {"code": 404}
-        
-        result = dbint.update("accounts", id, what, to)
-        if result == True:
-            return {"code": 200}
-        return {"code": 400, "error": result}
 
-    @api.delete("/account", tags=["Account"])
-    def delete_account(id : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        exists = dbint.check("accounts", id)
-        if not exists:
-            return {"code": 404}
-        result = dbint.delete("accounts", id)
-        if result == True:
-            return {"code": 200}
-        return {"code": 400, "error": result}
+@api.delete("/users", tags=["Users"])
+def delete_user(id: int, token: str = Header(default=None)):
+    token = dbint.Authentication.validate(token)
+    if not token:
+        return {"code": 401}
 
-class Transaction:
-    @api.post("/transaction", tags=["Transaction"])
-    def create_transaction(parentAccountId : int, toAccountId : int, amount : int, reference : str, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.create("transactions", structs.Transaction("uuid-id", parentAccountId, toAccountId, 0, amount, reference))
-        if type(result) == list:
-            return {"code": 200, "id": result[0]}
-        return {"code": 400, "error": result}
-
-    @api.get("/transaction", tags=["Transaction"])
-    def read_transaction(id : str, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.read("transactions", id)
-        if type(result) == list:
-            return {"code": 200, "data": dict(zip([column["name"] for column in structs.types["transactions"]], result))}
+    exists = dbint.User.check(id)
+    if not exists:
         return {"code": 404}
 
-    @api.get("/transaction/check", tags=["Transaction"])
-    def check_transaction(id : str, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.check("transactions", id)
-        if type(result) == str:
-            return {"code": 400, "error": result}
-        return {"code": 200 if result else 404}
+    result = dbint.User.delete(id)
+    if result is True:
+        return {"code": 200}
 
-    @api.get("/transaction/fetch", tags=["Transaction"])
-    def fetch_transaction(): #token : str=Header(default=None)
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.fetch("transactions")
-        columns = [column["name"] for column in structs.types["transactions"]]
-        return {"code": 200, "data": [dict(zip(columns, account)) for account in result]}
+    return {"code": 400, "error": result}
 
-    @api.patch("/transaction", tags=["Transaction"])
-    def update_transaction(id : str, what : str, to, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        exists = dbint.check("transactions", id)
-        if not exists:
-            return {"code": 404}
-        
-        result = dbint.update("transactions", id, what, to)
-        if result == True:
-            return {"code": 200}
-        return {"code": 400, "error": result}
 
-    @api.delete("/transaction", tags=["Transaction"])
-    def delete_transaction(id : str, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        exists = dbint.check("transactions", id)
-        if not exists:
-            return {"code": 404}
-        result = dbint.delete("transactions", id)
-        if result == True:
-            return {"code": 200}
-        return {"code": 400, "error": result}
+# =========================
+# AUTH
+# =========================
+@api.post("/auth/login", tags=["Authentication"])
+def login(email: str, password: str):
+    result = dbint.Authentication.login(email, password)
 
-class Loan:
-    @api.post("/loan", tags=["Loan"])
-    def create_loan(parentAccountId : int, amount : int, period : int, exclusion : int, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.create("loans", structs.Loan("uuid-id", parentAccountId, amount, 0, period, exclusion))
-        if type(result) == list:
-            return {"code": 200, "id": result[0]}
-        return {"code": 400, "error": result}
+    if type(result) == list:
+        return {"code": 200, "token": result[0]}
 
-    @api.get("/loan", tags=["Loan"])
-    def read_loan(id : str, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.read("loans", id)
-        if type(result) == list:
-            return {"code": 200, "data": dict(zip([column["name"] for column in structs.types["loans"]], result))}
+    if result is False:
+        return {"code": 401}
+
+    return {"code": 400, "error": result}
+
+
+@api.post("/auth/logout", tags=["Authentication"])
+def logout(token: str = Header(default=None)):
+    result = dbint.Authentication.logout(token)
+
+    if result:
+        return {"code": 200}
+
+    if result is False:
+        return {"code": 401}
+
+    return {"code": 400, "error": result}
+
+
+@api.post("/auth/validate", tags=["Authentication"])
+def validate_token(token: str = Header(default=None)):
+    result = dbint.Authentication.validate(token)
+
+    if result:
+        return {
+            "code": 200,
+            "requestedUser": {
+                "id": result[0],
+                "name": result[1],
+                "email": result[2]
+            }
+        }
+
+    if result is False:
+        return {"code": 401}
+
+    return {"code": 400, "error": result}
+
+# =========================
+# ACCOUNT
+# =========================
+
+@api.post("/account")
+def create_account(token: str = Header(default=None)):
+    user = dbint.Authentication.validate(token)
+    if not user:
+        return {"code": 401}
+
+    account = structs.Account(
+        0,
+        user[0],   # ✅ ALWAYS use token user id
+        0,
+        0,
+        "00-00-00",
+        1,
+        2025,
+        123
+    )
+
+    result = dbint.create("accounts", account)
+
+    if type(result) == list:
+        return {"code": 200, "accountNumber": result[0]}
+
+    return {"code": 400, "error": result}
+
+@api.get("/account/fetch")
+def fetch_account(token: str = Header(default=None)):
+    user = dbint.Authentication.validate(token)
+    if not user:
+        return {"code": 401}
+
+    user_id = user[0]  # 👈 THIS is the key
+
+    result = dbint.fetch("accounts")
+
+    # ✅ filter accounts manually
+    user_accounts = [acc for acc in result if acc[1] == user_id]
+
+    columns = [column["name"] for column in structs.types["accounts"]]
+
+    return {
+        "code": 200,
+        "data": [dict(zip(columns, account)) for account in user_accounts]
+    }
+
+@api.post("/account/deposit")
+def deposit(accountNumber: int, amount: int, token: str = Header(default=None)):
+    user = dbint.Authentication.validate(token)
+    if not user:
+        return {"code": 401}
+
+    account = dbint.read("accounts", accountNumber)
+    if not account:
         return {"code": 404}
 
-    @api.get("/loan/check", tags=["Loan"])
-    def check_loan(id : str, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.check("loans", id)
-        if type(result) == str:
-            return {"code": 400, "error": result}
-        return {"code": 200 if result else 404}
+    # ensure user owns account
+    if account[1] != user[0]:
+        return {"code": 403}
 
-    @api.get("/loan/fetch", tags=["Loan"])
-    def fetch_loan(): #token : str=Header(default=None)
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        result = dbint.fetch("loans")
-        columns = [column["name"] for column in structs.types["loans"]]
-        return {"code": 200, "data": [dict(zip(columns, account)) for account in result]}
+    new_balance = account[2] + amount
+    dbint.update("accounts", accountNumber, "balance", new_balance)
 
-    @api.patch("/loan", tags=["Loan"])
-    def update_loan(id : str, what : str, to, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        exists = dbint.check("loans", id)
-        if not exists:
-            return {"code": 404}
-        
-        result = dbint.update("loans", id, what, to)
-        if result == True:
-            return {"code": 200}
-        return {"code": 400, "error": result}
+    # 🧾 transaction
+    transaction = structs.Transaction(
+        "",
+        accountNumber,
+        accountNumber,
+        0,
+        amount,
+        "Deposit"
+    )
+    dbint.create("transactions", transaction)
 
-    @api.delete("/loan", tags=["Loan"])
-    def delete_loan(id : str, token : str=Header(default=None)):
-        token = dbint.Authentication.validate(token)
-        if not token:
-            return {"code": 401}
-        
-        exists = dbint.check("loans", id)
-        if not exists:
-            return {"code": 404}
-        result = dbint.delete("loans", id)
-        if result == True:
-            return {"code": 200}
-        return {"code": 400, "error": result}
-
-class Authentication:
-    @api.post("/auth/login", tags=["Authentication"])
-    def login(email : str, password : str):
-        result = dbint.Authentication.login(email, password)
-        if type(result) == list:
-            return {"code": 200, "token": result[0]}
-        if result == False:
-            return {"code": 401}
-        return {"code": 400, "error": result}
-    
-    @api.post("/auth/logout", tags=["Authentication"])
-    def logout(token : str=Header(default=None)):
-        result = dbint.Authentication.logout(token)
-        if result:
-            return {"code": 200}
-        if result == False:
-            return {"code": 401}
-        return {"code": 400, "error": result}
-    
-    @api.post("/auth/validate", tags=["Authentication"])
-    def validate_token(token : str=Header(default=None)):
-        result = dbint.Authentication.validate(token)
-        if result:
-            return {"code": 200, "requestedUser": {"id": result[0], "name": result[1], "email": result[2]}}
-        if result == False:
-            return {"code": 401}
-        return {"code": 400, "error": result}
+    return {"code": 200}
 
 
+@api.post("/account/withdraw")
+def withdraw(accountNumber: int, amount: int, token: str = Header(default=None)):
+    user = dbint.Authentication.validate(token)
+    if not user:
+        return {"code": 401}
 
+    account = dbint.read("accounts", accountNumber)
+    if not account:
+        return {"code": 404}
+
+    if account[1] != user[0]:
+        return {"code": 403}
+
+    if account[2] < amount:
+        return {"code": 400, "error": "Insufficient funds"}
+
+    new_balance = account[2] - amount
+    dbint.update("accounts", accountNumber, "balance", new_balance)
+
+    # 🧾 transaction
+    transaction = structs.Transaction(
+        "",
+        accountNumber,
+        accountNumber,
+        0,
+        -amount,
+        "Withdraw"
+    )
+    dbint.create("transactions", transaction)
+
+    return {"code": 200}
+
+
+@api.post("/account/transfer")
+def transfer(fromAccount: int, toAccount: int, amount: int, reference: str = "", token: str = Header(default=None)):
+    user = dbint.Authentication.validate(token)
+    if not user:
+        return {"code": 401}
+
+    sender = dbint.read("accounts", fromAccount)
+    receiver = dbint.read("accounts", toAccount)
+
+    if not sender or not receiver:
+        return {"code": 404}
+
+    if sender[1] != user[0]:
+        return {"code": 403}
+
+    if sender[2] < amount:
+        return {"code": 400, "error": "Insufficient funds"}
+
+    # 💸 update balances
+    dbint.update("accounts", fromAccount, "balance", sender[2] - amount)
+    dbint.update("accounts", toAccount, "balance", receiver[2] + amount)
+
+    # 🧾 CREATE TRANSACTION
+    transaction = structs.Transaction(
+        "",                 # id (auto in dbint)
+        fromAccount,
+        toAccount,
+        0,                  # date (auto)
+        amount,
+        reference
+    )
+
+    dbint.create("transactions", transaction)
+
+    return {"code": 200}
+
+#transactions
+@api.get("/transactions")
+def get_transactions(token: str = Header()):
+    user = dbint.Authentication.validate(token)
+
+    if not user:
+        return {"code": 401, "message": "Invalid token"}
+
+    transactions = dbint.fetch("transactions")
+
+    return {
+        "code": 200,
+        "data": transactions
+    }
+
+#loan
+@api.post("/loan")
+def create_loan(accountNumber: int, amount: int, months: int, token: str = Header()):
+    user = dbint.Authentication.validate(token)
+    if not user:
+        return {"code": 401}
+
+    account = dbint.read("accounts", accountNumber)
+    if not account:
+        return {"code": 404}
+
+    if account[1] != user[0]:
+        return {"code": 403}
+
+    import time
+    now = int(time.time())
+
+    # 💰 add money
+    new_balance = account[2] + amount
+    dbint.update("accounts", accountNumber, "balance", new_balance)
+
+    # 🧾 loan record
+    loan = structs.Loan(
+        "",
+        accountNumber,
+        amount,
+        months,
+        now,
+        0
+    )
+
+    result = dbint.create("loans", loan)
+    print("CREATE LOAN RESULT:", result)
+
+    print("LOANS TABLE:", dbint.fetch("loans"))
+
+    # 🧾 transaction (nice touch)
+    transaction = structs.Transaction(
+        "",
+        accountNumber,
+        accountNumber,
+        now,
+        amount,
+        "Loan"
+    )
+
+    dbint.create("transactions", transaction)
+    print("LOANS TABLE:", dbint.fetch("loans"))
+
+    return {"code": 200}
+
+@api.get("/loans")
+def get_loans(token: str = Header()):
+    user = dbint.Authentication.validate(token)
+
+    if not user:
+        return {"code": 401}
+
+    accounts = dbint.fetch("accounts")
+    loans = dbint.fetch("loans")
+
+    # ✅ FIX: define this properly
+    user_account_ids = [acc[0] for acc in accounts if acc[1] == user[0]]
+
+    # ✅ filter loans correctly
+    user_loans = [loan for loan in loans if loan[1] in user_account_ids]
+
+    # ✅ convert to objects
+    columns = [col["name"] for col in structs.types["loans"]]
+
+    return {
+        "code": 200,
+        "data": [dict(zip(columns, loan)) for loan in user_loans]
+    }
+
+# =========================
+# RUN SERVER
+# =========================
 import uvicorn
 
-uvicorn.run(api, host="0.0.0.0", port=5089)
+if __name__ == "__main__":
+    uvicorn.run(api, host="0.0.0.0", port=5089)

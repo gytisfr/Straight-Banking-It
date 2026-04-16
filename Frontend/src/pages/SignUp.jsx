@@ -2,28 +2,49 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 const SignUp = () => {
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+    setError("");
+
+    // 🔒 Basic validation
     if (password !== confirmPassword) {
-      console.log("Passwords do not match");
+      setError("Passwords do not match");
       return;
     }
-    const url = `http://127.0.0.1:5089/users?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-    console.log("Signup URL:", url);
+
     try {
-      const res = await fetch(url, { method: "POST" });
+      // 👇 matches your FastAPI params exactly
+      const url = `http://127.0.0.1:5089/users?name=${encodeURIComponent(
+        name
+      )}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(
+        password
+      )}&securityQ=1&securityA=test`;
+
+      const res = await fetch(url, {
+        method: "POST",
+      });
+
       const data = await res.json();
+
       console.log("Signup response:", data);
-      if (res.ok) {
+
+      // ✅ Check YOUR API response (not res.ok)
+      if (data.code === 201) {
         navigate("/login");
+      } else {
+        setError(data.error || "Signup failed");
       }
     } catch (err) {
-      console.error("Error during signup:", err);
+      console.error(err);
+      setError("Something went wrong");
     }
   };
 
@@ -33,25 +54,55 @@ const SignUp = () => {
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-10 w-[400px] flex flex-col gap-6">
 
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Create an account</h1>
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              Create an account
+            </h1>
           </div>
 
+          {/* 🔴 Error message */}
+          {error && (
+            <div className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-2">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSignUp} className="flex flex-col gap-4">
+
+            {/* NAME */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Username</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                Name
+              </label>
               <input
-                className="border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+                className="border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
 
+            {/* EMAIL */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Password</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                Email
+              </label>
               <input
-                className="border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+                className="border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* PASSWORD */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                Password
+              </label>
+              <input
+                className="border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -59,10 +110,13 @@ const SignUp = () => {
               />
             </div>
 
+            {/* CONFIRM PASSWORD */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Confirm Password</label>
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
+                Confirm Password
+              </label>
               <input
-                className="border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition"
+                className="border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -72,7 +126,7 @@ const SignUp = () => {
 
             <button
               type="submit"
-              className="mt-2 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-all cursor-pointer"
+              className="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 rounded-xl"
             >
               Create Account
             </button>
@@ -80,7 +134,10 @@ const SignUp = () => {
 
           <p className="text-sm text-center text-slate-400">
             Already have an account?{" "}
-            <Link to="/login" className="text-blue-500 font-semibold hover:text-blue-600 hover:underline transition-colors">
+            <Link
+              to="/login"
+              className="text-blue-500 font-semibold hover:underline"
+            >
               Log In
             </Link>
           </p>

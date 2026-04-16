@@ -76,13 +76,20 @@ class Transaction:
         return [self.id, self.parentAccountId, self.toAccountId, self.date, self.amount, self.reference]
 
 class Loan:
-    def __init__(self, id : str, parentAccountId : int, amount : int, dateTaken : int, period : int, exclusion : int):
+    def __init__(self, id, accountNumber, amount, months, dateTaken, exclusion=0):
         self.id = id
-        self.parentAccountId = parentAccountId
+        self.parentAccountId = accountNumber   # ✅ FIX
         self.amount = amount
-        self.dateTaken = dateTaken
-        self.period = period
+        self.dateTaken = dateTaken             # ✅ FIX
+        self.period = months                   # ✅ FIX
         self.exclusion = exclusion
     
     def listise(self):
-        return [self.id, self.parentAccountId, self.amount, self.dateTaken, self.period, self.exclusion]
+        return [
+            self.id,
+            self.parentAccountId,
+            self.amount,
+            self.dateTaken,
+            self.period,
+            self.exclusion
+        ]
