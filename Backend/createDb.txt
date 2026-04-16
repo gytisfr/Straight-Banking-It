@@ -1,0 +1,38 @@
+CREATE TABLE users (
+    id integer primary key,
+    name text not null,
+    email text not null,
+    password text not null,
+    securityQ text not null,
+    securityA text not null,
+    token text
+);
+
+CREATE TABLE accounts (
+    accountNumber integer primary key,
+    parentUserId integer not null,
+    balance integer not null,
+    cardNumber integer not null,
+    sortCode text default '67-67-67',
+    expiryMonth integer not null,
+    expiryYear integer not null,
+    cvv integer not null
+);
+
+CREATE TABLE transactions (
+    id text primary key,
+    parentAccountId integer not null,
+    toAccountId integer not null,
+    date integer not null,
+    amount integer not null,
+    reference text
+);
+
+CREATE TABLE loans (
+    id text primary key,
+    parentAccountId integer not null,
+    amount integer not null,
+    dateTaken integer not null,
+    period integer not null,
+    exclusion integer not null
+);

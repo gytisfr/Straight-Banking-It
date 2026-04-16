@@ -1,0 +1,12 @@
+*preinstalled*
+sqlite3
+typing
+datetime
+random
+os
+
+*required*
+fastapi
+uvicorn
+bcrypt
+pyjwt
