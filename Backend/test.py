@@ -1,7 +1,8 @@
-import dbint
+import datetime
 
-awd = dbint.checkCardNumbers(7890)
+awd = datetime.datetime.now()
 
-print(awd)
+print(awd.month)
+print(awd.year)
 
 input()

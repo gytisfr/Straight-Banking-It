@@ -74,6 +74,11 @@ def create(table : str, struct):
             while exists:
                 struct.cardNumber = card.generate()
                 exists = checkCardNumbers(struct.cardNumber)
+            
+            rn = datetime.datetime.now()
+            struct.expiryMonth = rn.month
+            struct.expiryYear = rn.year + 5
+            struct.cvv = f"{random.randint(0,9)}{random.randint(0,9)}{random.randint(0,9)}"
         case "transactions" | "loans":
             struct.id = uuid.uuid4()
             exists = check("transactions", struct.id)
@@ -180,8 +185,17 @@ def delete(table : str, id):
     connection.close()
 
     return True
-
+"""
+id
+name
+email
+password
+securityQ
+securityA
+token
+"""
 class User:
+    #def create(name : str, email : str, password : str, securityQ : int, securityA : str):
     def create(username : str, password : str):
         username = encode(username)
 
@@ -258,7 +272,7 @@ class User:
         what = what.lower()
 
         if what != "username":
-            return f"AttributeError: No such column '{what}' in {table} table"
+            return f"AttributeError: No such column '{what}' in users table"
         
         to = encode(to)
         

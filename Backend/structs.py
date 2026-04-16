@@ -4,7 +4,7 @@ types = {
         {"name": "name", "type": str, "required": True},
         {"name": "email", "type": str, "required": True},
         {"name": "password", "type": str, "required": True},
-        {"name": "securityQ", "type": str, "required": True},
+        {"name": "securityQ", "type": int, "required": True},
         {"name": "securityA", "type": str, "required": True},
         {"name": "token", "type": str, "required": False}
     ],
@@ -37,7 +37,7 @@ types = {
 }
 
 class User:
-    def __init__(self, id : int, name : str, email : str, password : str, securityQ : str, securityA : str, token : str = None):
+    def __init__(self, id : int, name : str, email : str, password : str, securityQ : int, securityA : str, token : str = None):
         self.id = id
         self.name = name
         self.email = email
