@@ -203,8 +203,8 @@ class User:
     def create(name : str, email : str, password : str, securityQ : int, securityA : str):
         name, email, securityQ = encode([name, email, securityQ.lower()])
 
-        passwordHash = encode(bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
-        securityAHash = encode(bcrypt.hashpw(securityA.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
+        passwordHash = encode(bcrypt.hashpw(encode(password).encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
+        securityAHash = encode(bcrypt.hashpw(encode(securityA).encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
 
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
@@ -274,7 +274,7 @@ class User:
             return f"AttributeError: No such column '{what}' in users table"
         
         if what == "password":
-            to = encode(bcrypt.hashpw(to.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
+            to = encode(bcrypt.hashpw(encode(to).encode("utf-8"), bcrypt.gensalt()).decode("utf-8"))
 
         to = encode(to)
         
@@ -302,13 +302,13 @@ class User:
         return True
 
 class Authentication:
-    def login(username : str, password : str):
+    def login(email : str, password : str):
 
-        username = encode(username)
+        email = encode(email)
 
         connection = sqlite3.connect("db.sqlite3", check_same_thread=False)
         cursor = connection.cursor()
-        user = cursor.execute(f"select id, password from users where username = '{username}';").fetchall()
+        user = cursor.execute(f"select id, password from users where email = '{email}';").fetchall()
         connection.close()
 
         if not user:
