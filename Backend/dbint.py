@@ -79,7 +79,16 @@ def create(table : str, struct):
             struct.expiryMonth = rn.month
             struct.expiryYear = rn.year + 5
             struct.cvv = f"{random.randint(0,9)}{random.randint(0,9)}{random.randint(0,9)}"
-        case "transactions" | "loans":
+        case "transactions":
+            struct.id = uuid.uuid4()
+            exists = check("transactions", struct.id)
+
+            while exists:
+                struct.id = uuid.uuid4()
+                exists = check("transactions", struct.id)
+            
+            struct.date = datetime.datetime.now().timestamp()
+        case "loans":
             struct.id = uuid.uuid4()
             exists = check("transactions", struct.id)
 

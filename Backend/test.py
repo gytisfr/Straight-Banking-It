@@ -1,8 +1,10 @@
 import datetime
 
-awd = datetime.datetime.now()
+awd = datetime.datetime.now().timestamp()
 
-print(awd.month)
-print(awd.year)
+print(awd)
 
 input()
+
+#1776353834
+#1776353821
