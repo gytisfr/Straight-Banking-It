@@ -22,38 +22,37 @@ export default function Payments() {
       console.log(data);
 
       if (data.code === 200) {
-        const mapped = data.data.map((tx) => {
-          const id = tx[0];
-          const from = tx[1];
-          const to = tx[2];
-          const timestamp = Math.floor(tx[3]);
-          const amount = Number(tx[4]);
-          const reference = tx[5] || "Transaction";
+const mapped = data.data.map((tx) => {
+  const id = tx.id;
+  const from = tx.parentAccountId;
+  const to = tx.toAccountId;
+  const timestamp = Math.floor(tx.date);
+  const amount = Number(tx.amount);
+  const reference = tx.reference || "Transaction";
 
-          let type = "payment";
-          let name = reference;
+  let type = "payment";
+  let name = reference;
 
-          // 🧠 Smart labeling
-          if (reference.toLowerCase().includes("deposit")) {
-            type = "deposit";
-            name = "Deposit";
-          } else if (reference.toLowerCase().includes("withdraw")) {
-            type = "withdraw";
-            name = "Withdrawal";
-          } else if (from !== to) {
-            type = "transfer";
-            name = `Transfer to ${accountNames[to] || `Account ${to}`}`;
-          }
+  if (reference.toLowerCase().includes("deposit")) {
+    type = "deposit";
+    name = "Deposit";
+  } else if (reference.toLowerCase().includes("withdraw")) {
+    type = "withdraw";
+    name = "Withdrawal";
+  } else if (from !== to) {
+    type = "transfer";
+    name = `Transfer to ${accountNames[to] || `Account ${to}`}`;
+  }
 
-          return {
-            id,
-            type,
-            name,
-            reference,
-            amount,
-            timestamp,
-          };
-        });
+  return {
+    id,
+    type,
+    name,
+    reference,
+    amount,
+    timestamp,
+  };
+});
 
         setTransactions(mapped);
       }
@@ -67,14 +66,14 @@ export default function Payments() {
   }, []);
 
   // ================= FORMAT =================
-  const formatDateTime = (timestamp) => {
-    const date = new Date(timestamp * 1000);
+const formatDateTime = (timestamp) => {
+  const date = new Date(timestamp * 1000);
 
-    return `${date.toLocaleDateString("en-GB")} • ${date.toLocaleTimeString(
-      "en-GB",
-      { hour: "2-digit", minute: "2-digit" }
-    )}`;
-  };
+  return `${date.toLocaleDateString("en-GB")} • ${date.toLocaleTimeString(
+    "en-GB",
+    { hour: "2-digit", minute: "2-digit" }
+  )}`;
+};
 
   // ================= STATS =================
   const spending = transactions
@@ -171,7 +170,7 @@ export default function Payments() {
                       tx.amount > 0 ? "text-green-500" : "text-red-500"
                     }`}
                   >
-                    {tx.amount > 0 ? "+" : ""}£{Math.abs(tx.amount)}
+                  £{Math.abs(tx.amount).toFixed(2)}
                   </p>
                   <p className="text-sm text-slate-400">
                     {formatDateTime(tx.timestamp)}

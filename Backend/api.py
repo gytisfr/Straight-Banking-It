@@ -318,11 +318,26 @@ def get_transactions(token: str = Header()):
     if not user:
         return {"code": 401, "message": "Invalid token"}
 
+    user_id = user[0]
+
+    # 🔑 get user's accounts
+    accounts = dbint.fetch("accounts")
+    user_account_ids = [acc[0] for acc in accounts if acc[1] == user_id]
+
+    # 📦 get all transactions
     transactions = dbint.fetch("transactions")
+
+    # ✅ filter ONLY user's transactions
+    user_transactions = [
+        tx for tx in transactions
+        if tx[1] in user_account_ids or tx[2] in user_account_ids
+    ]
+
+    columns = [col["name"] for col in structs.types["transactions"]]
 
     return {
         "code": 200,
-        "data": transactions
+        "data": [dict(zip(columns, tx)) for tx in user_transactions]
     }
 
 #loan
