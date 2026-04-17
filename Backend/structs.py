@@ -78,10 +78,10 @@ class Transaction:
 class Loan:
     def __init__(self, id, accountNumber, amount, months, dateTaken, exclusion=0):
         self.id = id
-        self.parentAccountId = accountNumber   # ✅ FIX
+        self.parentAccountId = accountNumber  
         self.amount = amount
-        self.dateTaken = dateTaken             # ✅ FIX
-        self.period = months                   # ✅ FIX
+        self.dateTaken = dateTaken             
+        self.period = months                   
         self.exclusion = exclusion
     
     def listise(self):

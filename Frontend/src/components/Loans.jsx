@@ -1,48 +1,84 @@
 import { useEffect, useState } from "react";
 
-export default function Loans() {
+const formatCurrency = (value) =>
+  Number(value || 0).toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+export default function Loans({ accounts = [] }) {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    fetch("http://localhost:5089/loans", {
-      method: "GET",
-      headers: {
-        token: token,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("LOANS RESPONSE:", data);
+    const fetchLoans = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:5089/loans", {
+          method: "GET",
+          headers: { token },
+        });
 
-        if (data.code === 200) {
-          setLoans(data.data);
+        const data = await res.json();
+
+        if (data.code !== 200) {
+          setLoans([]);
+          setLoading(false);
+          return;
         }
 
-        setLoading(false);
-      })
-      .catch((err) => {
+        const userAccountNumbers = accounts.map((acc) => acc.accountNumber);
+        const filteredLoans =
+          userAccountNumbers.length > 0
+            ? data.data.filter((loan) =>
+                userAccountNumbers.includes(loan.parentAccountId)
+              )
+            : data.data;
+
+        const loansWithInterest = await Promise.all(
+          filteredLoans.map(async (loan) => {
+            try {
+              const interestRes = await fetch(
+                `http://127.0.0.1:5089/loan/interest?amount=${loan.amount}&months=${loan.period}&exclusion=${loan.exclusion ?? 0}`,
+                {
+                  method: "GET",
+                  headers: { token },
+                }
+              );
+
+              const interestData = await interestRes.json();
+
+              return {
+                ...loan,
+                interestRate:
+                  interestData.code === 200 ? Number(interestData.interest) : 0,
+              };
+            } catch (error) {
+              console.error("Error fetching loan interest:", error);
+              return { ...loan, interestRate: 0 };
+            }
+          })
+        );
+
+        setLoans(loansWithInterest);
+      } catch (err) {
         console.error("Error fetching loans:", err);
+        setLoans([]);
+      } finally {
         setLoading(false);
-      });
-  }, []);
+      }
+    };
 
-  // 💸 Interest logic (5%)
-  const INTEREST_RATE = 0.05;
+    fetchLoans();
+  }, [accounts, token]);
 
-  const calculateTotalWithInterest = (amount) => {
-    return amount * (1 + INTEREST_RATE);
-  };
-
-  const calculateMonthly = (amount, months) => {
-    return (amount / months).toFixed(2);
-  };
-
-  const calculateMonthlyWithInterest = (amount, months) => {
-    const total = calculateTotalWithInterest(amount);
-    return (total / months).toFixed(2);
+  const getAccountName = (accountId) => {
+    const index = accounts.findIndex((acc) => acc.accountNumber === accountId);
+    if (index === 0) return "Main Account";
+    if (index === 1) return "Savings Account";
+    if (index > 1) return `Account ${accountId}`;
+    return `Account ${accountId}`;
   };
 
   return (
@@ -57,45 +93,59 @@ export default function Loans() {
 
       <div className="space-y-4">
         {loans.map((loan) => {
-          const total = calculateTotalWithInterest(loan.amount);
-          const interest = total - loan.amount;
+          const principal = Number(loan.amount || 0);
+          const period = Number(loan.period || 1);
+          const interestRate = Number(loan.interestRate || 0);
+          const total = principal * (1 + interestRate / 100);
+          const interestAmount = total - principal;
+          const monthlyWithoutInterest = principal / period;
+          const monthlyWithInterest = total / period;
 
           return (
             <div
               key={loan.id}
               className="bg-white shadow rounded-xl p-5 border hover:shadow-lg transition"
             >
-              <div className="mb-2 text-sm text-gray-500">
-                Loan ID: {loan.id}
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-sm text-gray-500">Loan ID: {loan.id}</div>
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600 font-semibold">
+                  {getAccountName(loan.parentAccountId)}
+                </span>
               </div>
 
-              <div className="text-lg font-semibold mb-2">
-                £{loan.amount}
+              <div className="text-lg font-semibold mb-3">
+                £{formatCurrency(principal)}
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <p><strong>Period:</strong> {loan.period} months</p>
                 <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(loan.dateTaken * 1000).toLocaleDateString()}
+                  <strong>Period:</strong> {period} months
+                </p>
+                <p>
+                  <strong>Exclusion:</strong> {Number(loan.exclusion || 0)} months
+                </p>
+                <p>
+                  <strong>Date taken:</strong>{" "}
+                  {new Date(Number(loan.dateTaken) * 1000).toLocaleDateString("en-GB")}
                 </p>
 
                 <p>
                   <strong>Monthly (no interest):</strong> £
-                  {calculateMonthly(loan.amount, loan.period)}
+                  {formatCurrency(monthlyWithoutInterest)}
                 </p>
 
                 <p>
-                  <strong>Monthly (with interest):</strong> £
-                  {calculateMonthlyWithInterest(loan.amount, loan.period)}
+                  <strong>Monthly (with {interestRate}% interest):</strong> £
+                  {formatCurrency(monthlyWithInterest)}
                 </p>
 
                 <p>
-                  <strong>Total repay:</strong> £{total.toFixed(2)}
+                  <strong>Total repay:</strong> £{formatCurrency(total)}
                 </p>
 
                 <p className="text-red-500">
-                  <strong>Interest:</strong> £{interest.toFixed(2)}
+                  <strong>Interest ({interestRate}%):</strong> £
+                  {formatCurrency(interestAmount)}
                 </p>
               </div>
             </div>

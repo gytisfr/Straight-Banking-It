@@ -26,10 +26,10 @@ const Login = () => {
       console.log("Login response:", data);
 
       if (data.code === 200) {
-        // ✅ store token
+
         localStorage.setItem("token", data.token);
 
-        // ✅ redirect
+
         navigate("/");
       } else {
         setError("Invalid email or password");
@@ -52,7 +52,7 @@ const Login = () => {
             </h1>
           </div>
 
-          {/* 🔴 Error message */}
+
           {error && (
             <div className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-2">
               {error}
@@ -61,7 +61,7 @@ const Login = () => {
 
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
 
-            {/* EMAIL */}
+   
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
                 Email
@@ -75,7 +75,7 @@ const Login = () => {
               />
             </div>
 
-            {/* PASSWORD */}
+
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
                 Password

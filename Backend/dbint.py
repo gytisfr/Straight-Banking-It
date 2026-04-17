@@ -61,25 +61,25 @@ def checkTypesMatch(table : str, data : list):
 def create(table: str, struct):
     match table:
         case "accounts":
-            # Generate unique account number
+       
             struct.accountNumber = random.randint(11111111, 19999999)
             exists = check("accounts", struct.accountNumber)
             while exists:
                 struct.accountNumber = random.randint(11111111, 19999999)
                 exists = check("accounts", struct.accountNumber)
 
-            # Generate unique card number
+    
             struct.cardNumber = card.generate()
             exists = checkCardNumbers(struct.cardNumber)
             while exists:
                 struct.cardNumber = card.generate()
                 exists = checkCardNumbers(struct.cardNumber)
 
-            # Expiry + CVV
+ 
             rn = datetime.datetime.now()
             struct.expiryMonth = rn.month
             struct.expiryYear = rn.year + 5
-            struct.cvv = random.randint(100, 999)  # ✅ FIXED (int not string)
+            struct.cvv = random.randint(100, 999)  
 
         case "transactions":
             struct.id = str(uuid.uuid4())
@@ -92,14 +92,14 @@ def create(table: str, struct):
 
         case "loans":
             struct.id = str(uuid.uuid4())
-            exists = check("loans", struct.id)  # ✅ FIXED (was checking transactions)
+            exists = check("loans", struct.id)
             while exists:
                 struct.id = str(uuid.uuid4())
                 exists = check("loans", struct.id)
 
             struct.dateTaken = datetime.datetime.now().timestamp()
 
-    # ✅ ALWAYS BUILD QUERY (removed broken "if not query")
+
     listed = encode(struct.listise())
 
     columns = [col["name"] for col in structs.types[table]]
@@ -120,15 +120,15 @@ def create(table: str, struct):
     try:
         cursor.execute(query)
     except Exception as e:
-        print("❌ DB ERROR:", e)   # 👈 ADD THIS LINE
-        print("❌ QUERY:", query)  # 👈 ADD THIS TOO (VERY USEFUL)
+        print("❌ DB ERROR:", e)  
+        print("❌ QUERY:", query) 
         connection.close()
         return str(type(e)).removeprefix("<class '").removesuffix("'>") + ": " + str(e)
 
     connection.commit()
     connection.close()
 
-    # ✅ RETURN CORRECT ID
+ 
     return [struct.id] if table != "accounts" else [struct.accountNumber]
 
 def read(table: str, id):

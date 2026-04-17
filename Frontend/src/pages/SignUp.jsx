@@ -14,14 +14,14 @@ const SignUp = () => {
     e.preventDefault();
     setError("");
 
-    // 🔒 Basic validation
+
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
     try {
-      // 👇 matches your FastAPI params exactly
+
       const url = `http://127.0.0.1:5089/users?name=${encodeURIComponent(
         name
       )}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(
@@ -36,7 +36,6 @@ const SignUp = () => {
 
       console.log("Signup response:", data);
 
-      // ✅ Check YOUR API response (not res.ok)
       if (data.code === 201) {
         navigate("/login");
       } else {
@@ -59,7 +58,7 @@ const SignUp = () => {
             </h1>
           </div>
 
-          {/* 🔴 Error message */}
+
           {error && (
             <div className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-2">
               {error}
@@ -68,7 +67,6 @@ const SignUp = () => {
 
           <form onSubmit={handleSignUp} className="flex flex-col gap-4">
 
-            {/* NAME */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
                 Name
@@ -82,7 +80,7 @@ const SignUp = () => {
               />
             </div>
 
-            {/* EMAIL */}
+
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
                 Email
@@ -96,7 +94,7 @@ const SignUp = () => {
               />
             </div>
 
-            {/* PASSWORD */}
+ 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
                 Password
@@ -110,7 +108,7 @@ const SignUp = () => {
               />
             </div>
 
-            {/* CONFIRM PASSWORD */}
+
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
                 Confirm Password

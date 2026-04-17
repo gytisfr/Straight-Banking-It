@@ -4,19 +4,18 @@ export default function Accounts({
   accounts,
   setShowModal,
   setModalType,
-  setSelectedAccount, // comes from Home (for modal)
+  setSelectedAccount, 
 }) {
-  // ✅ LOCAL state (renamed to avoid conflict)
+
   const [selectedAccountDetails, setSelectedAccountDetails] = useState(null);
 
-  // 🧠 Optional naming
+
   const getAccountName = (acc, index) => {
     if (index === 0) return "Main Account";
     if (index === 1) return "Savings Account";
     return `Account ${acc.accountNumber}`;
   };
 
-  // 💰 Format money
   const formatMoney = (amount) => {
     return Number(amount).toLocaleString("en-GB", {
       minimumFractionDigits: 2,
@@ -24,7 +23,6 @@ export default function Accounts({
     });
   };
 
-  // 🔒 Mask account number
   const maskAccountNumber = (num) => {
     const str = String(num);
     return `**** ${str.slice(-4)}`;
@@ -34,7 +32,6 @@ export default function Accounts({
     <div>
       <h1 className="text-3xl font-bold mb-6">Your Accounts</h1>
 
-      {/* ================= ACCOUNT GRID ================= */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {accounts.map((acc, index) => (
           <div
@@ -42,7 +39,7 @@ export default function Accounts({
             onClick={() => setSelectedAccountDetails(acc)}
             className="bg-white border border-slate-200 rounded-2xl p-5 cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all"
           >
-            {/* TOP */}
+
             <div className="flex justify-between items-center mb-4">
               <div className="text-sm text-slate-400">
                 {getAccountName(acc, index)}
@@ -53,7 +50,7 @@ export default function Accounts({
               </span>
             </div>
 
-            {/* BALANCE */}
+
             <div className="mb-4">
               <p className="text-2xl font-bold text-slate-900">
                 £{formatMoney(acc.balance)}
@@ -63,14 +60,14 @@ export default function Accounts({
               </p>
             </div>
 
-            {/* ACTIONS */}
+
             <div
               className="flex gap-2"
-              onClick={(e) => e.stopPropagation()} // prevent card click
+              onClick={(e) => e.stopPropagation()} 
             >
               <button
                 onClick={() => {
-                  setSelectedAccount(acc.accountNumber); // 👈 goes to Home
+                  setSelectedAccount(acc.accountNumber); 
                   setModalType("deposit");
                   setShowModal(true);
                 }}
@@ -81,7 +78,7 @@ export default function Accounts({
 
               <button
                 onClick={() => {
-                  setSelectedAccount(acc.accountNumber); // 👈 goes to Home
+                  setSelectedAccount(acc.accountNumber); 
                   setModalType("withdraw");
                   setShowModal(true);
                 }}
@@ -94,7 +91,6 @@ export default function Accounts({
         ))}
       </div>
 
-      {/* ================= ACCOUNT DETAILS ================= */}
       {selectedAccountDetails && (
         <div className="mt-10 bg-white border border-slate-200 rounded-2xl p-6">
           <div className="flex justify-between items-center mb-4">

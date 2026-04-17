@@ -23,7 +23,7 @@ const itemVariants = {
   },
 };
 
-// New fade-in variant for About section
+
 const aboutVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
@@ -38,7 +38,6 @@ const Footer = () => {
     <footer className="w-full bg-white text-slate-900 relative z-50 border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 py-10 grid md:grid-cols-2 gap-10">
 
-        {/* Section 1 - About */}
         <div>
           <h2 className="text-xl font-extrabold mb-3 text-slate-900">About Team4 Banking</h2>
           <motion.p
@@ -52,7 +51,6 @@ const Footer = () => {
           </motion.p>
         </div>
 
-        {/* Section 2 - Quick Links */}
         <div>
           <div className="flex justify-end">
             <h2 className="text-xl mr-auto font-extrabold mb-3 text-slate-900">Quick Links</h2>
@@ -91,7 +89,6 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="bg-slate-900 text-slate-100 text-center py-4">
         &copy; {new Date().getFullYear()} Team4 Banking. All rights reserved.
       </div>

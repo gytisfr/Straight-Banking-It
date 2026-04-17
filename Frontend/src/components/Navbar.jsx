@@ -5,8 +5,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [name, setName] = useState("Loading...");
-
-  // ✅ Fetch user name
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("token");
@@ -36,7 +34,7 @@ const Navbar = () => {
     fetchUser();
   }, []);
 
-  // ✅ Logout
+
   const handleLogout = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -65,14 +63,14 @@ const Navbar = () => {
 
       <div className="flex items-center gap-5">
 
-        {/* ✅ Name ONLY (your original style) */}
+
         <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-1.5 cursor-pointer">
           <span className="text-sm font-semibold text-slate-800">
             {name}
           </span>
         </div>
 
-        {/* Menu */}
+
         <div className='relative'>
           <svg
             onClick={() => setLogoutOpen((prev) => !prev)}

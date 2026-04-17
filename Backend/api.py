@@ -1,12 +1,11 @@
 import random
 import fastapi
-import structs, dbint
+import structs, dbint, interest
 from fastapi import Header
 from fastapi.middleware.cors import CORSMiddleware
 
 api = fastapi.FastAPI()
 
-# ✅ CORS (cleaned a bit)
 api.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://0.0.0.0:5173"],
@@ -15,17 +14,27 @@ api.add_middleware(
     allow_headers=["*"],
 )
 
-# =========================
-# ROOT
-# =========================
+
 @api.get("/", tags=["Root"])
 def root():
     return {"code": 200}
 
 
-# =========================
-# USERS
-# =========================
+@api.get("/loan/interest")
+def get_loan_interest(amount: int, months: int, exclusion: int = 0):
+    if amount <= 1 or months <= 0:
+        return {"code": 400, "error": "Amount must be greater than 1 and months must be greater than 0"}
+
+    try:
+        rate = interest.calcInterest(amount, months, exclusion)
+    except ValueError as e:
+        return {"code": 400, "error": str(e)}
+    except Exception as e:
+        return {"code": 400, "error": str(e)}
+
+    return {"code": 200, "interest": rate}
+
+
 @api.post("/users", tags=["Users"])
 def create_user(name: str, email: str, password: str, securityQ: int, securityA: str):
     exists = dbint.User.check_from_email(email)
@@ -114,9 +123,7 @@ def delete_user(id: int, token: str = Header(default=None)):
     return {"code": 400, "error": result}
 
 
-# =========================
-# AUTH
-# =========================
+
 @api.post("/auth/login", tags=["Authentication"])
 def login(email: str, password: str):
     result = dbint.Authentication.login(email, password)
@@ -162,9 +169,7 @@ def validate_token(token: str = Header(default=None)):
 
     return {"code": 400, "error": result}
 
-# =========================
-# ACCOUNT
-# =========================
+
 
 @api.post("/account")
 def create_account(token: str = Header(default=None)):
@@ -174,7 +179,7 @@ def create_account(token: str = Header(default=None)):
 
     account = structs.Account(
         0,
-        user[0],   # ✅ ALWAYS use token user id
+        user[0],  
         0,
         0,
         "00-00-00",
@@ -196,11 +201,11 @@ def fetch_account(token: str = Header(default=None)):
     if not user:
         return {"code": 401}
 
-    user_id = user[0]  # 👈 THIS is the key
+    user_id = user[0]  
 
     result = dbint.fetch("accounts")
 
-    # ✅ filter accounts manually
+
     user_accounts = [acc for acc in result if acc[1] == user_id]
 
     columns = [column["name"] for column in structs.types["accounts"]]
@@ -220,14 +225,13 @@ def deposit(accountNumber: int, amount: int, token: str = Header(default=None)):
     if not account:
         return {"code": 404}
 
-    # ensure user owns account
+
     if account[1] != user[0]:
         return {"code": 403}
 
     new_balance = account[2] + amount
     dbint.update("accounts", accountNumber, "balance", new_balance)
 
-    # 🧾 transaction
     transaction = structs.Transaction(
         "",
         accountNumber,
@@ -260,7 +264,6 @@ def withdraw(accountNumber: int, amount: int, token: str = Header(default=None))
     new_balance = account[2] - amount
     dbint.update("accounts", accountNumber, "balance", new_balance)
 
-    # 🧾 transaction
     transaction = structs.Transaction(
         "",
         accountNumber,
@@ -292,16 +295,15 @@ def transfer(fromAccount: int, toAccount: int, amount: int, reference: str = "",
     if sender[2] < amount:
         return {"code": 400, "error": "Insufficient funds"}
 
-    # 💸 update balances
     dbint.update("accounts", fromAccount, "balance", sender[2] - amount)
     dbint.update("accounts", toAccount, "balance", receiver[2] + amount)
 
-    # 🧾 CREATE TRANSACTION
+
     transaction = structs.Transaction(
-        "",                 # id (auto in dbint)
+        "",                
         fromAccount,
         toAccount,
-        0,                  # date (auto)
+        0,                 
         amount,
         reference
     )
@@ -310,7 +312,6 @@ def transfer(fromAccount: int, toAccount: int, amount: int, reference: str = "",
 
     return {"code": 200}
 
-#transactions
 @api.get("/transactions")
 def get_transactions(token: str = Header()):
     user = dbint.Authentication.validate(token)
@@ -320,14 +321,12 @@ def get_transactions(token: str = Header()):
 
     user_id = user[0]
 
-    # 🔑 get user's accounts
     accounts = dbint.fetch("accounts")
     user_account_ids = [acc[0] for acc in accounts if acc[1] == user_id]
 
-    # 📦 get all transactions
+
     transactions = dbint.fetch("transactions")
 
-    # ✅ filter ONLY user's transactions
     user_transactions = [
         tx for tx in transactions
         if tx[1] in user_account_ids or tx[2] in user_account_ids
@@ -340,9 +339,8 @@ def get_transactions(token: str = Header()):
         "data": [dict(zip(columns, tx)) for tx in user_transactions]
     }
 
-#loan
 @api.post("/loan")
-def create_loan(accountNumber: int, amount: int, months: int, token: str = Header()):
+def create_loan(accountNumber: int, amount: int, months: int, exclusion: int = 0, token: str = Header()):
     user = dbint.Authentication.validate(token)
     if not user:
         return {"code": 401}
@@ -357,18 +355,17 @@ def create_loan(accountNumber: int, amount: int, months: int, token: str = Heade
     import time
     now = int(time.time())
 
-    # 💰 add money
     new_balance = account[2] + amount
     dbint.update("accounts", accountNumber, "balance", new_balance)
 
-    # 🧾 loan record
+
     loan = structs.Loan(
         "",
         accountNumber,
         amount,
         months,
         now,
-        0
+        exclusion
     )
 
     result = dbint.create("loans", loan)
@@ -376,7 +373,6 @@ def create_loan(accountNumber: int, amount: int, months: int, token: str = Heade
 
     print("LOANS TABLE:", dbint.fetch("loans"))
 
-    # 🧾 transaction (nice touch)
     transaction = structs.Transaction(
         "",
         accountNumber,
@@ -401,13 +397,13 @@ def get_loans(token: str = Header()):
     accounts = dbint.fetch("accounts")
     loans = dbint.fetch("loans")
 
-    # ✅ FIX: define this properly
+
     user_account_ids = [acc[0] for acc in accounts if acc[1] == user[0]]
 
-    # ✅ filter loans correctly
+
     user_loans = [loan for loan in loans if loan[1] in user_account_ids]
 
-    # ✅ convert to objects
+
     columns = [col["name"] for col in structs.types["loans"]]
 
     return {
@@ -415,9 +411,6 @@ def get_loans(token: str = Header()):
         "data": [dict(zip(columns, loan)) for loan in user_loans]
     }
 
-# =========================
-# RUN SERVER
-# =========================
 import uvicorn
 
 if __name__ == "__main__":

@@ -17,17 +17,17 @@ export default function Home() {
   const [activeNav, setActiveNav] = useState("Overview");
 
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(null); // "deposit" | "withdraw"
+  const [modalType, setModalType] = useState(null); 
 
   const [accounts, setAccounts] = useState([]);
 
-  //transfer between accounts tab thing
+  
   const [transferType, setTransferType] = useState("internal");
 
   const [payeeName, setPayeeName] = useState("");
   const [sortCode, setSortCode] = useState("");
 
-  //form for withdraw deposit etc
+
   const [selectedAccount, setSelectedAccount] = useState("");
   const [amount, setAmount] = useState("");
   const [toAccount, setToAccount] = useState("");
@@ -35,6 +35,8 @@ export default function Home() {
 
   const [loanAmount, setLoanAmount] = useState("");
   const [loanPeriod, setLoanPeriod] = useState("");
+  const [loanExclusion, setLoanExclusion] = useState("0");
+  const [loanInterest, setLoanInterest] = useState(0);
 
 const fetchAccounts = async () => {
   const token = localStorage.getItem("token");
@@ -61,6 +63,34 @@ useEffect(() => {
   fetchAccounts();
 }, []);
 
+useEffect(() => {
+  const fetchLoanInterest = async () => {
+    if (modalType !== "loan" || !loanAmount || !loanPeriod) {
+      setLoanInterest(0);
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `http://127.0.0.1:5089/loan/interest?amount=${Number(loanAmount)}&months=${Number(loanPeriod)}&exclusion=${Number(loanExclusion || 0)}`,
+        {
+          method: "GET",
+          headers: { token },
+        }
+      );
+
+      const data = await res.json();
+      setLoanInterest(data.code === 200 ? Number(data.interest) : 0);
+    } catch (err) {
+      console.error("Error fetching interest estimate:", err);
+      setLoanInterest(0);
+    }
+  };
+
+  fetchLoanInterest();
+}, [loanAmount, loanPeriod, loanExclusion, modalType]);
+
 const totalBalance = accounts.reduce((sum, acc) => {
   return sum + Number(acc.balance || 0);
 }, 0);
@@ -71,7 +101,7 @@ const createAccount = async () => {
   const token = localStorage.getItem("token");
 
   try {
-    // get user id from token validation
+
     const userRes = await fetch("http://127.0.0.1:5089/auth/validate", {
       method: "POST",
       headers: {
@@ -88,7 +118,7 @@ const createAccount = async () => {
 
     const userId = userData.requestedUser.id;
 
-    // create account
+ 
     const res = await fetch(
       `http://127.0.0.1:5089/account?parentUserId=${userId}`,
       {
@@ -104,7 +134,7 @@ const createAccount = async () => {
     if (data.code === 200) {
       console.log("Account created");
 
-      // 🔁 REFRESH ACCOUNTS
+  
     fetchAccounts();
     } else {
       console.error("Failed to create account", data);
@@ -118,10 +148,10 @@ const createAccount = async () => {
     <div className="flex flex-col min-h-screen bg-slate-100">
       <div className="flex flex-1">
 
-        {/* Sidebar */}
+
         <aside className="w-52 bg-white border-r border-slate-200 px-3 pt-8 shrink-0 flex flex-col">
 
-  {/* Navigation */}
+
   <nav className="flex flex-col gap-1">
     {navItems.map((item) => (
       <button
@@ -139,10 +169,10 @@ const createAccount = async () => {
     ))}
   </nav>
 
-  {/* Divider */}
+
   <div className="my-6 border-t border-slate-200"></div>
 
-  {/* Local Rewards */}
+
   <div>
     <p className="text-xs text-slate-800 font-semibold uppercase tracking-wide px-4 mb-2">
       Local Rewards
@@ -162,13 +192,13 @@ const createAccount = async () => {
 
 </aside>
 
-        {/* Main */}
+
         <main className="flex-1 px-12 py-10 overflow-y-auto">
 
-          {/* ================= OVERVIEW ================= */}
+
           {activeNav === "Overview" && (
             <>
-              {/* Balance */}
+
               <div className="mb-6">
                 <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mb-1">
                   Total available amount
@@ -178,7 +208,7 @@ const createAccount = async () => {
 </h1>
               </div>
 
-              {/* Actions */}
+
               <div className="flex gap-4 mb-16">
                 {["Withdraw", "Deposit", "Make Payment", "Loan"].map((action, i) => (
   <button
@@ -205,7 +235,7 @@ const createAccount = async () => {
 ))}
               </div>
 
-              {/* Accounts preview */}
+
 <div className="flex items-center justify-between mb-6">
   <h2 className="text-2xl font-bold text-slate-900">
     Accounts
@@ -245,7 +275,7 @@ const createAccount = async () => {
                 ))}
               </div>
 
-              {/* ================= POINTS & REWARDS ================= */}
+
               <div className="mb-16">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-slate-900">
@@ -262,7 +292,6 @@ const createAccount = async () => {
 
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-5">
 
-                  {/* Points balance */}
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-400">
@@ -278,7 +307,7 @@ const createAccount = async () => {
                     </button>
                   </div>
 
-                  {/* Progress */}
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-slate-500">
@@ -295,7 +324,7 @@ const createAccount = async () => {
                     </div>
                   </div>
 
-                  {/* Info */}
+
                   <div className="text-sm text-slate-500">
                     Earn{" "}
                     <span className="font-semibold text-slate-700">
@@ -313,10 +342,10 @@ const createAccount = async () => {
             </>
           )}
 
-          {/* LOANS  */}
-          {activeNav === "Loans" && <Loans />}
 
-          {/* ================= ACCOUNTS ================= */}
+          {activeNav === "Loans" && <Loans accounts={accounts} />}
+
+
           {activeNav === "Accounts" && (
           <Accounts
   accounts={accounts}
@@ -326,7 +355,7 @@ const createAccount = async () => {
 />
           )}
 
-          {/* ================= PAYMENTS ================= */}
+
           {activeNav === "Payments" && <Payments />}
 
 {showModal && (
@@ -342,7 +371,7 @@ const createAccount = async () => {
       className="bg-white rounded-2xl p-6 w-full max-w-md shadow-lg"
     >
 
-      {/* Title */}
+
       <h2 className="text-xl font-bold mb-4">
       {modalType === "payment"
   ? "Make Payment"
@@ -375,10 +404,10 @@ const createAccount = async () => {
   </div>
 )}
 
-      {/* ================= PAYMENT FORM ================= */}
+
       {modalType === "payment" && (
         <>
-          {/* From account */}
+
           <div className="mb-4">
           <label className="text-sm text-slate-500">From Account</label>
 <select
@@ -415,7 +444,7 @@ const createAccount = async () => {
       </div>
     )}
 
-          {/* Payee name */}
+
 {transferType === "external" && (
   <div className="mb-4">
     <label className="text-sm text-slate-500">Payee Name</label>
@@ -431,7 +460,7 @@ const createAccount = async () => {
 
 {transferType === "external" && (
   <>
-    {/* Sort code */}
+
     <div className="mb-4">
       <label className="text-sm text-slate-500">Sort Code</label>
     <input
@@ -443,7 +472,7 @@ const createAccount = async () => {
 />
     </div>
 
-    {/* Account number */}
+
     <div className="mb-4">
       <label className="text-sm text-slate-500">Account Number</label>
       <input
@@ -457,7 +486,7 @@ const createAccount = async () => {
   </>
 )}
 
-          {/* Reference */}
+
           <div className="mb-4">
             <label className="text-sm text-slate-500">Reference</label>
           <input
@@ -469,7 +498,7 @@ const createAccount = async () => {
 />
           </div>
 
-          {/* Amount */}
+
           <div className="mb-6">
             <label className="text-sm text-slate-500">Amount</label>
           <input
@@ -483,7 +512,7 @@ const createAccount = async () => {
         </>
       )}
 
-      {/* ================= DEPOSIT / WITHDRAW ================= */}
+
         {modalType !== "payment" && modalType !== "loan" && (
         <>
           <div className="mb-4">
@@ -556,12 +585,12 @@ const createAccount = async () => {
     </div>
 
     <div className="mb-6 text-sm text-slate-500">
-      Estimated interest: <span className="font-semibold">5%</span>
+      Estimated interest: <span className="font-semibold">{loanInterest}%</span>
     </div>
   </>
 )}
 
-      {/* Actions */}
+  
       <div className="flex justify-end gap-3">
         <button
           onClick={() => {
@@ -629,7 +658,7 @@ try {
     }
 
   } else if (modalType === "loan") {
-    url = `http://127.0.0.1:5089/loan?accountNumber=${selectedAccount}&amount=${loanAmount}&months=${loanPeriod}`;
+    url = `http://127.0.0.1:5089/loan?accountNumber=${selectedAccount}&amount=${loanAmount}&months=${loanPeriod}&exclusion=${Number(loanExclusion || 0)}`;
   }
 
   const res = await fetch(url, {
@@ -643,7 +672,7 @@ try {
         console.log("REAL STATUS:", res.status);
       fetchAccounts();
 
-      // reset form ONLY on success
+
   setSelectedAccount("");
   setToAccount("");
   setAmount("");
@@ -652,6 +681,7 @@ try {
 setSortCode("");
 setLoanAmount("");
 setLoanPeriod("");
+setLoanExclusion("0");
   setTransferType("internal");
 
     setShowModal(false);

@@ -1,14 +1,16 @@
 import math
 
+
 def calcInterest(amount, period, exclusion):
     return round((((period / 12) * 5) * (1 + (exclusion / period))) * -math.log((math.log(amount, 10) / 10), 10), 1)
 
-amount = int(input("Amount:"))
-period = int(input("Period:"))
-exclusion = int(input("Exclusion:"))
 
-interest = calcInterest(amount, period, exclusion)
+if __name__ == "__main__":
+    amount = int(input("Amount:"))
+    period = int(input("Period:"))
+    exclusion = int(input("Exclusion:"))
 
-print(f"{interest}%")
+    interest = calcInterest(amount, period, exclusion)
 
-input()
+    print(f"{interest}%")
+    input()

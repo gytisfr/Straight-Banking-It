@@ -17,7 +17,7 @@ function AppWrapper() {
       {!hideNavFooter && <Navbar />}
 
       <Routes>
-        {/* Public routes */}
+
         <Route
           path='/login'
           element={
@@ -35,7 +35,7 @@ function AppWrapper() {
           }
         />
 
-        {/* Protected routes */}
+
         <Route
           path='/'
           element={
@@ -44,17 +44,6 @@ function AppWrapper() {
             </ProtectedRoute>
           }
         />
-
-        {/* <Route
-          path='/routes'
-          element={
-            <ProtectedRoute>
-              <RoutesPage />
-            </ProtectedRoute>
-          }
-        /> */}
-
-        {/* Fallback route */}
         <Route path='*' element={<div className='w-full h-full flex justify-center items-center'><h1>Page Not Found 404</h1></div>} />
       </Routes>
 
